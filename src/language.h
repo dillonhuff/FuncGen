@@ -31,6 +31,15 @@ namespace FuncGen {
   };
 
   class Data {
+    int bitLength;
+
+  public:
+
+    Data(const int bitLength_) : bitLength(bitLength_) {}
+
+    int bitWidth() const {
+      return bitLength;
+    }
   };
   
   enum StatementType {
@@ -153,10 +162,16 @@ namespace FuncGen {
   class Context {
 
     std::map<std::string, Function*> functions;
+    std::map<int, Data*> datas;
+
   public:
 
     Data* arrayType(const int width) {
-      return nullptr;
+      if (!contains_key(width, datas)) {
+        datas.insert({width, new Data(width)});
+
+      }
+      return map_find(width, datas);
     }
 
     Function* newFunction(const std::string& name,
@@ -192,6 +207,10 @@ namespace FuncGen {
     ~Context() {
       for (auto f : functions) {
         delete f.second;
+      }
+
+      for (auto d : datas) {
+        delete d.second;
       }
     }
   };
