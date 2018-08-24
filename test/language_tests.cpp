@@ -185,16 +185,20 @@ namespace FuncGen {
     auto c2 = f->unsignedDivide(f->constant(width, 32),
                                 f->constant(width, 17));
 
-    auto x = f->subtract(c1, f->multiply(c2, f->getValue("D")));
+    auto x = f->zeroExtend(2*width,
+                           f->subtract(c1, f->multiply(c2, f->getValue("D"))));
+
+    auto dext = f->zeroExtend(2*width, f->getValue("D"));
 
     f->repeat(numIterations,
               f->assignStmt(x,
                             f->plusExpr(x,
                                         f->timesExpr(x,
-                                                     f->subExpr(f->constant(width, 1),
-                                                                f->timesExpr(f->getValue("D"),
+                                                     f->subExpr(f->constant(2*width, 1),
+                                                                f->timesExpr(dext,
                                                                              x))))));
 
+    
     auto res = f->multiply(f->getValue("N"), x);
     f->assign(f->getValue("quotient"), res);
 
