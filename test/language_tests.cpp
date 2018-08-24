@@ -84,7 +84,7 @@ namespace FuncGen {
     // 3. Do unsigned division
     // 4. Slice away the last bit
 
-    auto zeroInFixedPoint = divOne->addConstant(width + 1, 1 << width);
+    auto zeroInFixedPoint = divOne->constant(width + 1, 1 << width);
     auto divisor = divOne->zeroExtend(width + 1, divOne->getValue("x"));
     auto initQuotient = divOne->unsignedDivide(zeroInFixedPoint, divisor);
     auto finalQuote = divOne->slice(width - 1, 0, initQuotient);
@@ -167,5 +167,36 @@ namespace FuncGen {
       REQUIRE(sim.getOutput("quotient") == BitVector(width, 129 / 8));
     }
 
+  }
+
+  TEST_CASE("16 bit newton-raphson division") {
+    int width = 16;
+    Context c;
+    Function* f = c.newFunction("newton_raphson_div_16",
+                                {{"N", c.arrayType(width)},
+                                    {"D", c.arrayType(width)}},
+                                {{"quotient", c.arrayType(width)}});
+
+    int numIterations = ceil(log2((width + 1) / log2(17)));
+    cout << "Number of iterations = " << numIterations << endl;
+
+    auto c1 = f->unsignedDivide(f->constant(width, 48),
+                                f->constant(width, 17));
+    auto c2 = f->unsignedDivide(f->constant(width, 32),
+                                f->constant(width, 17));
+
+    auto x = f->subtract(c1, f->multiply(c2, f->getValue("D")));
+
+    f->repeat(numIterations, xUpdate);
+
+    auto res = f->multiply(f->getValue("N"), x);
+    f->assign(f->getValue("quotient"), res);
+
+    Simulator sim(*f);
+    sim.setInput("N", BitVector(width, 10));
+    sim.setInput("D", BitVector(width, 4));
+    sim.evaluate();
+
+    REQUIRE(sim.getOutput("quotient") == BitVector(width, 10 / 4));
   }
 }

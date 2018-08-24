@@ -312,6 +312,30 @@ namespace FuncGen {
       statements.push_back(new FunctionCall(divideName, freshValue, {{"in0", a}, {"in1", b}}));
       return freshValue;
     }
+
+    Value* subtract(Value* a, Value* b) {
+      assert(a != nullptr);
+      assert(b != nullptr);
+
+      assert(sameWidth(*a, *b));
+
+      std::string divideName = "subtract_" + std::to_string(a->bitWidth());
+      Value* freshValue = makeUniqueValue(a->bitWidth());
+      statements.push_back(new FunctionCall(divideName, freshValue, {{"in0", a}, {"in1", b}}));
+      return freshValue;
+    }
+
+    Value* add(Value* a, Value* b) {
+      assert(a != nullptr);
+      assert(b != nullptr);
+
+      assert(sameWidth(*a, *b));
+
+      std::string divideName = "add_" + std::to_string(a->bitWidth());
+      Value* freshValue = makeUniqueValue(a->bitWidth());
+      statements.push_back(new FunctionCall(divideName, freshValue, {{"in0", a}, {"in1", b}}));
+      return freshValue;
+    }
     
     Value* zeroExtend(const int resWidth, Value* v) {
       std::string zextName = "zero_extend_" + std::to_string(resWidth);
@@ -360,23 +384,10 @@ namespace FuncGen {
     }
 
     Value* addEquals(const Value* a, const Value* b) {
-      //statements.push_back(new FunctionCall());
       return nullptr;
     }
 
-    // Value* addCase(const Value* res, const Value* ifTrue, const Value* ifFalse) {
-    //   statements.push_back(new Case());
-    //   return nullptr;
-    // }
-
-    Value* addConstant(const int bitWidth, const int value);
-    //   ConstantValue* v = new ConstantValue(context.arrayType(bitWidth),
-    //                                        BitVector(bitWidth, value));
-                                           
-    //   values.insert({"const_" + std::to_string(uniqueNum), v});
-    //   uniqueNum++;
-    //   return v;
-    // }
+    Value* constant(const int bitWidth, const int value);
 
     void setReturn(const std::string& returnName, const Value* value) {
       statements.push_back(new ReturnStmt());

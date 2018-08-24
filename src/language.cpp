@@ -22,7 +22,7 @@ namespace FuncGen {
     return v;
   }
 
-  Value* Function::addConstant(const int bitWidth, const int value) {
+  Value* Function::constant(const int bitWidth, const int value) {
     ConstantValue* v = new ConstantValue(context.arrayType(bitWidth),
                                          BitVector(bitWidth, value));
                                            
@@ -69,7 +69,7 @@ namespace FuncGen {
     Simulator sim(*f);
     vector<pair<BitVector, BitVector> > resultsTable;
     for (int i = 0; i < pow(2, inWidth); i++) {
-      cout << i << endl;
+      //cout << i << endl;
       BitVector in(inWidth, i);
       sim.setInput(inputName, in);
       sim.evaluate();

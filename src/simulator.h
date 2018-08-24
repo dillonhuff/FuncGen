@@ -114,13 +114,13 @@ namespace FuncGen {
         int endSlice = stoi(name.substr(pre.size()));
         int startSlice = stoi(name.substr(pre.size() + 2));
 
-        std::cout << "Start slice at " << startSlice << " end at " << endSlice << std::endl;
+        //std::cout << "Start slice at " << startSlice << " end at " << endSlice << std::endl;
         Value* toShift = call.getInput("in");
 
         Value* res = call.getResult();
 
         auto sliceRes = slice(getValue(toShift), startSlice, endSlice + 1);
-        std::cout << "SliceRes = " << sliceRes << std::endl;
+        //std::cout << "SliceRes = " << sliceRes << std::endl;
         setValue(res, sliceRes);
       } else if (hasPrefix(name, "logical_shift_right_")) {
         std::string pre = "logical_shift_right_";
@@ -170,8 +170,8 @@ namespace FuncGen {
         assert(stmt.type() == STATEMENT_TYPE_ASSIGNMENT);
         const Assignment& assign = static_cast<const Assignment&>(stmt);
         Value* a = assign.getLHS();
-        std::cout << "RHS of assignment = " << getValue(assign.getRHS()) << std::endl;
-        std::cout << "LHS of assignment = " << assign.getLHS() << std::endl;
+        //std::cout << "RHS of assignment = " << getValue(assign.getRHS()) << std::endl;
+        //std::cout << "LHS of assignment = " << assign.getLHS() << std::endl;
         setValue(a, getValue(assign.getRHS()));
       }
     }
