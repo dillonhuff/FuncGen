@@ -42,15 +42,17 @@ namespace FuncGen {
     Value* tempRes = udiv->unsignedDivide(aExt, bExt);
     
     //Value* result = udiv->shiftLeft(1, tempRes);
-    udiv->assign(udiv->getValue("quotient"), udiv->slice(width - 1, 0, tempRes));
+    auto sliceRes = udiv->slice(width - 1, 0, tempRes);
+
+    udiv->assign(udiv->getValue("quotient"), sliceRes);
 
     Simulator sim(*udiv);
-    sim.setInput("a", BitVector(width, 1));
+    sim.setInput("a", BitVector(width, 8));
     sim.setInput("b", BitVector(width, 2));
 
     sim.evaluate();
 
-    REQUIRE(sim.getOutput("quotient") == BitVector(width, "10000000"));
+    REQUIRE(sim.getOutput("quotient") == BitVector(width, "00000100"));
   }
 
   TEST_CASE("Lookup table based division") {

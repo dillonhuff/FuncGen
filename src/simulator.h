@@ -9,18 +9,18 @@ namespace FuncGen {
                                               const BitVector& b) {
     assert(a.bitLength() == b.bitLength());
 
-    // BitVector extA = zero_extend(a.bitLength() + 1, a);
-    // BitVector extB = zero_extend(a.bitLength() + 1, a);
+    BitVector extA = zero_extend(2*a.bitLength(), a);
+    BitVector extB = zero_extend(2*b.bitLength(), b);
 
     BitVector quotient(a.bitLength(), 0);
-    BitVector a_tmp = a;
+    BitVector a_tmp = extA;
 
-    std::cout << "a = " << a << std::endl;
-    std::cout << "b = " << b << std::endl;
+    std::cout << "a = " << extA << std::endl;
+    std::cout << "b = " << extB << std::endl;
 
     // Use slow divide method
     for (int i = (a.bitLength() - 1); i >= 0; i--) {
-      BitVector shifted_b = shl(b, BitVector(b.bitLength(), i));
+      BitVector shifted_b = shl(extB, BitVector(b.bitLength(), i));
 
       std::cout << "Shifted b = " << shifted_b << std::endl;
       std::cout << "a_tmp     = " << a_tmp << std::endl;
@@ -139,7 +139,9 @@ namespace FuncGen {
 
         Value* res = call.getResult();
 
-        setValue(res, slice(getValue(toShift), startSlice, endSlice + 1));
+        auto sliceRes = slice(getValue(toShift), startSlice, endSlice + 1);
+        std::cout << "SliceRes = " << sliceRes << std::endl;
+        setValue(res, sliceRes);
       } else {
         std::cout << "ERROR: Unsupported function name " << name << std::endl;
         assert(false);
