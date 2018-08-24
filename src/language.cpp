@@ -28,4 +28,34 @@ namespace FuncGen {
     statements.push_back(new FunctionCall(str, freshValue, args));
     return freshValue;
   }
+
+  Value* Function::functionCall(const std::string& str, Value* arg) {
+    Function* f = context.getFunction(str);
+    assert(f->inputMap().size() == 1);
+
+    string argName = begin(f->inputMap())->first;
+
+    Value* freshValue = makeUniqueValue(f->outputValue()->bitWidth());
+    statements.push_back(new FunctionCall(str, freshValue, {{argName, arg}}));
+    return freshValue;
+    
+  }
+
+  Function*
+  precomputeTable(const std::string& tableName, Function* f, Context& c) {
+    assert(f->inputMap().size() == 1);
+    assert(f->outputMap().size() == 1);
+
+    int inWidth = (*begin(f->inputMap())).second->bitWidth();
+    int outWidth = (*begin(f->outputMap())).second->bitWidth();
+
+    Function* table = c.newFunction(tableName,
+                                    {{"in", c.arrayType(inWidth)}},
+                                    {{"out", c.arrayType(outWidth)}});
+
+    auto res = table->functionCall(f->getName(), table->getValue("in"));
+    table->assign(table->getValue("out"), res);
+
+    return table;
+  }
 }

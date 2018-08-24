@@ -87,6 +87,11 @@ namespace FuncGen {
   static inline bool sameWidth(const Value* a, const Value* b) {
     return sameWidth(*a, *b);
   }
+
+  class Table {
+  public:
+    
+  };
   
   enum StatementType {
     STATEMENT_TYPE_FUNCTION_CALL,
@@ -252,6 +257,7 @@ namespace FuncGen {
     }
 
     Value* functionCall(const std::string& str, const std::map<std::string, Value*>& args);
+    Value* functionCall(const std::string& str, Value* arg);
 
     Value* getValue(const std::string& name) {
       return map_find(name, values);
@@ -427,5 +433,8 @@ namespace FuncGen {
       }
     }
   };
+
+  Function*
+  precomputeTable(const std::string& tableName, Function* f, Context& c);
 
 }

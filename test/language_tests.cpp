@@ -135,8 +135,11 @@ namespace FuncGen {
 
     // Critical Issue: Pre-computed tables. How do I express this concept?
     Function* divByOne = buildDivideByOne(width, c);
+    Function* divByOneTable = precomputeTable("one_divided_by_table", divByOne, c);
 
-    auto fb = udiv->functionCall(divByOne->getName(), {{"x", udiv->getValue("b")}});
+    // Replace this with table lookup
+    auto fb = udiv->functionCall(divByOneTable->getName(), {{"in", udiv->getValue("b")}});
+    //auto fb = udiv->tableLookup(divByOneTable, udiv->getValue("b"));
 
     auto res = udiv->multiply(udiv->zeroExtend(width*2, udiv->getValue("a")),
                               udiv->zeroExtend(width*2, fb));
