@@ -271,6 +271,18 @@ namespace FuncGen {
       return freshValue;
     }
 
+    Value* multiply(Value* a, Value* b) {
+      assert(a != nullptr);
+      assert(b != nullptr);
+
+      assert(sameWidth(*a, *b));
+
+      std::string divideName = "multiply_" + std::to_string(a->bitWidth());
+      Value* freshValue = makeUniqueValue(a->bitWidth());
+      statements.push_back(new FunctionCall(divideName, freshValue, {{"in0", a}, {"in1", b}}));
+      return freshValue;
+    }
+    
     Value* zeroExtend(const int resWidth, Value* v) {
       std::string zextName = "zero_extend_" + std::to_string(resWidth);
 
@@ -288,6 +300,15 @@ namespace FuncGen {
       return freshValue;
     }
 
+    Value* logicalShiftRight(const int shiftValue, Value* v) {
+      std::string shiftName = "logical_shift_right_" + std::to_string(shiftValue);
+
+      Value* freshValue = makeUniqueValue(v->bitWidth());
+      statements.push_back(new FunctionCall(shiftName, freshValue, {{"in", v}}));
+
+      return freshValue;
+    }
+    
     void assign(Value* a, Value* b) {
       assert(a != nullptr);
       assert(b != nullptr);

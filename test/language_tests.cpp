@@ -135,7 +135,14 @@ namespace FuncGen {
 
     // Critical Issue: Pre-computed tables. How do I express this concept?
     Function* divByOne = buildDivideByOne(width, c);
+
     auto fb = udiv->functionCall(divByOne->getName(), {{"x", udiv->getValue("b")}});
+
+    auto res = udiv->multiply(udiv->zeroExtend(width*2, udiv->getValue("a")),
+                              udiv->zeroExtend(width*2, fb));
+
+    auto rt = udiv->logicalShiftRight(width, res);
+    udiv->assign(udiv->getValue("quotient"), udiv->slice(width - 1, 0, rt));
 
     Simulator sim(*udiv);
     sim.setInput("a", BitVector(width, 10));

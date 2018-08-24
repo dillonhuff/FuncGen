@@ -139,7 +139,15 @@ namespace FuncGen {
 
         Value* res = call.getResult();
 
-        setValue(res, shl(shiftAmount, getValue(toShift)));
+        setValue(res, shl(getValue(toShift), BitVector(32, shiftAmount)));
+      } else if (hasPrefix(name, "multiply_")) {
+        Value* toDivide = call.getInput("in0");
+        Value* divisor = call.getInput("in1");
+
+        Value* res = call.getResult();
+
+        setValue(res, mul_general_width_bv(getValue(toDivide), getValue(divisor)));
+        
       } else if (hasPrefix(name, "slice_")) {
         std::string pre = "slice_";
         int endSlice = stoi(name.substr(pre.size()));
@@ -153,6 +161,15 @@ namespace FuncGen {
         auto sliceRes = slice(getValue(toShift), startSlice, endSlice + 1);
         std::cout << "SliceRes = " << sliceRes << std::endl;
         setValue(res, sliceRes);
+      } else if (hasPrefix(name, "logical_shift_right_")) {
+        std::string pre = "logical_shift_right_";
+        int shiftAmount = stoi(name.substr(pre.size()));
+
+        Value* toShift = call.getInput("in");
+
+        Value* res = call.getResult();
+
+        setValue(res, lshr(getValue(toShift), BitVector(32, shiftAmount)));
       } else {
         std::cout << "ERROR: Unsupported function name " << name << std::endl;
         Function* toCall = f.getContext().getFunction(name);
