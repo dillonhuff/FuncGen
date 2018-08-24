@@ -92,12 +92,24 @@ namespace FuncGen {
     auto finalQuote = divOne->slice(width - 1, 0, initQuotient);
     divOne->assign(divOne->getValue("quotient"), finalQuote);
 
-    Simulator sim(*divOne);
-    sim.setInput("x", BitVector(width, 2));
+    SECTION("1/2 == 0.5") {
+      Simulator sim(*divOne);
+      sim.setInput("x", BitVector(width, 2));
 
-    sim.evaluate();
+      sim.evaluate();
 
-    REQUIRE(sim.getOutput("quotient") == BitVector(width, "10000000"));
+      REQUIRE(sim.getOutput("quotient") == BitVector(width, "10000000"));
+    }
+
+    SECTION("1/3 == 0.3...") {
+      Simulator sim(*divOne);
+      sim.setInput("x", BitVector(width, 3));
+
+      sim.evaluate();
+
+      REQUIRE(sim.getOutput("quotient") == BitVector(width, "01010101"));
+    }
+
   }
 
   TEST_CASE("Lookup table based division") {
