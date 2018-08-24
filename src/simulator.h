@@ -44,7 +44,6 @@ namespace FuncGen {
 
   static inline bool isZext(const std::string& name) {
     return hasPrefix(name, "zero_extend_");
-    //return name.substr(0, 12) == "zero_extend_";
   }
 
   static inline bool isUnsignedDivide(const std::string& name) {
@@ -82,6 +81,13 @@ namespace FuncGen {
         variableValues.insert({v.second, unknown_bv(v.second->bitWidth())});
       }
 
+    }
+
+    void printValueStore() const {
+      std::cout << "Values" << std::endl;
+      for (auto name : variableNames) {
+        std::cout << "\t" << name.first << " = " << map_find(name.second, variableValues) << std::endl;
+      }
     }
 
     BitVector getOutput(const std::string& outputName) const {
@@ -157,6 +163,7 @@ namespace FuncGen {
         const Assignment& assign = static_cast<const Assignment&>(stmt);
         Value* a = assign.getLHS();
         std::cout << "RHS of assignment = " << getValue(assign.getRHS()) << std::endl;
+        std::cout << "LHS of assignment = " << assign.getLHS() << std::endl;
         setValue(a, getValue(assign.getRHS()));
       }
     }
