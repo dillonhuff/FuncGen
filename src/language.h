@@ -191,6 +191,7 @@ namespace FuncGen {
     FunctionCall(const std::string& funcName_,
                  //Value* result_,
                  const std::map<std::string, Value*>& inputs_) :
+      Expression(nullptr),
       funcName(funcName_), //result(result_),
       inputs(inputs_) {}
 

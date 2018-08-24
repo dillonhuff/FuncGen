@@ -35,7 +35,7 @@ namespace FuncGen {
                                 const std::map<std::string, Value*>& args) {
     Function* f = context.getFunction(str);
     Value* freshValue = makeUniqueValue(f->outputValue()->bitWidth());
-    statements.push_back(new FunctionCall(str, freshValue, args));
+    statements.push_back(new Assignment(freshValue, new FunctionCall(str, args)));
     return freshValue;
   }
 
@@ -46,7 +46,7 @@ namespace FuncGen {
     string argName = begin(f->inputMap())->first;
 
     Value* freshValue = makeUniqueValue(f->outputValue()->bitWidth());
-    statements.push_back(new FunctionCall(str, freshValue, {{argName, arg}}));
+    statements.push_back(new Assignment(freshValue, new FunctionCall(str, {{argName, arg}})));
     return freshValue;
     
   }

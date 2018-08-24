@@ -79,35 +79,45 @@ namespace FuncGen {
       variableValues[v] = value;
     }
 
-    void evaluateFunctionCall(const FunctionCall& call) {
+    BitVector evaluateFunctionCall(const FunctionCall& call) {
+      //assert(false);
+
       std::string name = call.functionName();
       if (isZext(name)) {
         Value* a = call.getInput("in");
-        Value* res = call.getResult();
-        setValue(res, zero_extend(res->bitWidth(), getValue(a)));
+        //Value* res = call.getResult();
+
+        std::string ss = "zero_extend_";
+        int width = stoi(name.substr(ss.size()));
+        return zero_extend(width, getValue(a));
+
+        //setValue(res, zero_extend(res->bitWidth(), getValue(a)));
       } else if (isUnsignedDivide(name)) {
         Value* toDivide = call.getInput("in0");
         Value* divisor = call.getInput("in1");
 
-        Value* res = call.getResult();
+        //Value* res = call.getResult();
 
-        setValue(res, unsigned_divide(getValue(toDivide), getValue(divisor)));
+        return unsigned_divide(getValue(toDivide), getValue(divisor));
+        //setValue(res, unsigned_divide(getValue(toDivide), getValue(divisor)));
       } else if (isShiftLeft(name)) {
         std::string pre = "shift_left_";
         int shiftAmount = stoi(name.substr(pre.size()));
 
         Value* toShift = call.getInput("in");
 
-        Value* res = call.getResult();
+        //Value* res = call.getResult();
 
-        setValue(res, shl(getValue(toShift), BitVector(32, shiftAmount)));
+        return shl(getValue(toShift), BitVector(32, shiftAmount));
+        //setValue(res, shl(getValue(toShift), BitVector(32, shiftAmount)));
       } else if (hasPrefix(name, "multiply_")) {
         Value* toDivide = call.getInput("in0");
         Value* divisor = call.getInput("in1");
 
-        Value* res = call.getResult();
+        //Value* res = call.getResult();
 
-        setValue(res, mul_general_width_bv(getValue(toDivide), getValue(divisor)));
+        return mul_general_width_bv(getValue(toDivide), getValue(divisor));
+        //setValue(res, mul_general_width_bv(getValue(toDivide), getValue(divisor)));
         
       } else if (hasPrefix(name, "slice_")) {
         std::string pre = "slice_";
@@ -117,20 +127,22 @@ namespace FuncGen {
         //std::cout << "Start slice at " << startSlice << " end at " << endSlice << std::endl;
         Value* toShift = call.getInput("in");
 
-        Value* res = call.getResult();
+        //Value* res = call.getResult();
 
         auto sliceRes = slice(getValue(toShift), startSlice, endSlice + 1);
         //std::cout << "SliceRes = " << sliceRes << std::endl;
-        setValue(res, sliceRes);
+        return sliceRes;
+        //setValue(res, sliceRes);
       } else if (hasPrefix(name, "logical_shift_right_")) {
         std::string pre = "logical_shift_right_";
         int shiftAmount = stoi(name.substr(pre.size()));
 
         Value* toShift = call.getInput("in");
 
-        Value* res = call.getResult();
+        //Value* res = call.getResult();
 
-        setValue(res, lshr(getValue(toShift), BitVector(32, shiftAmount)));
+        return lshr(getValue(toShift), BitVector(32, shiftAmount));
+      //setValue(res, lshr(getValue(toShift), BitVector(32, shiftAmount)));
       } else {
         Function* toCall = f.getContext().getFunction(name);
 
@@ -142,17 +154,30 @@ namespace FuncGen {
 
         std::cout << "Output result = " << s.getOutput(toCall->outputValueName()) << std::endl;
 
-        setValue(call.getResult(), s.getOutput(toCall->outputValueName()));
+        //setValue(call.getResult(), s.getOutput(toCall->outputValueName()));
 
+        return s.getOutput(toCall->outputValueName());
         //assert(false);
       }
     }
 
+    BitVector evaluateExpression(Expression* expr) {
+      if (expr->type() == EXPRESSION_TYPE_FUNCTION_CALL) {
+        return evaluateFunctionCall(*static_cast<FunctionCall*>(expr));
+      } else if (expr->type() == EXPRESSION_TYPE_CONSTANT) {
+        return static_cast<ConstantValue*>(expr)->getValue();
+      } else if (expr->type() == EXPRESSION_TYPE_VARIABLE) {
+        return getValue(static_cast<Value*>(expr));
+      }
+      assert(false);
+    }
+
     void evaluateStatement(Statement& stmt) {
-      if (stmt.type() == STATEMENT_TYPE_FUNCTION_CALL) {
-        const FunctionCall& call = static_cast<const FunctionCall&>(stmt);
-        evaluateFunctionCall(call);
-      } else if (stmt.type() == STATEMENT_TYPE_CASE) {
+      // if (stmt.type() == STATEMENT_TYPE_FUNCTION_CALL) {
+      //   const FunctionCall& call = static_cast<const FunctionCall&>(stmt);
+      //   evaluateFunctionCall(call);
+      // } else if (stmt.type() == STATEMENT_TYPE_CASE) {
+      if (stmt.type() == STATEMENT_TYPE_CASE) {
         Case& assign = static_cast<Case&>(stmt);
 
         Value* input = assign.getInput();
@@ -172,7 +197,7 @@ namespace FuncGen {
         Value* a = assign.getLHS();
         //std::cout << "RHS of assignment = " << getValue(assign.getRHS()) << std::endl;
         //std::cout << "LHS of assignment = " << assign.getLHS() << std::endl;
-        setValue(a, getValue(assign.getRHS()));
+        setValue(a, evaluateExpression(assign.getRHS()));
       }
     }
 
