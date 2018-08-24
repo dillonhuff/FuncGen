@@ -10,6 +10,8 @@ using namespace bsim;
 
 namespace FuncGen {
 
+  class Context;
+
   typedef bsim::quad_value_bit_vector BitVector;
 
   static inline
@@ -20,10 +22,6 @@ namespace FuncGen {
     }
     return ind;
   }
-
-  class Value {
-  };
-
 
   enum DataType {
     DATA_TYPE_ARRAY,
@@ -42,6 +40,23 @@ namespace FuncGen {
     }
   };
   
+  class Value {
+
+    Data* dataType;
+
+  public:
+
+    Value(Data* dataType_) : dataType(dataType_) {}
+
+    int bitWidth() const {
+      return dataType->bitWidth();
+    }
+  };
+
+  static inline bool sameWidth(const Value& a, const Value& b) {
+    return a.bitWidth() == b.bitWidth();
+  }
+
   enum StatementType {
     STATEMENT_TYPE_FUNCTION_CALL,
     STATEMENT_TYPE_CASE,
@@ -77,7 +92,21 @@ namespace FuncGen {
   };
 
   class FunctionCall : public Statement {
+    std::string funcName;
+    Value* result;
+
+    //std::map<std::string, Value*> inputs;
+    
   public:
+    FunctionCall(const std::string& funcName_,
+                 Value* result_,
+                 const std::map<std::string, Value*>& inputs_) :
+      funcName(funcName_), result(result_) {}
+
+    Value* getResult() const {
+      return result;
+    }
+
     virtual StatementType type() const {
       return STATEMENT_TYPE_FUNCTION_CALL;
     }
@@ -91,16 +120,21 @@ namespace FuncGen {
   };
   
   class Function {
+    Context& context;
+
     std::string name;
     std::vector<Statement*> statements;
     std::map<std::string, Data*> inputs;
     std::map<std::string, Data*> outputs;
 
+    std::set<Value*> values;
+    
   public:
 
-    Function(const std::string& name_,
+    Function(Context& context_,
+             const std::string& name_,
              const std::map<std::string, Data*>& inputs_,
-             const std::map<std::string, Data*>& outputs_) : name(name_), inputs(inputs_), outputs(outputs_) {}
+             const std::map<std::string, Data*>& outputs_) : context(context_), name(name_), inputs(inputs_), outputs(outputs_) {}
 
     std::string getName() const {
       return name;
@@ -124,13 +158,41 @@ namespace FuncGen {
       return nullptr;
     }
 
+    Value* makeUniqueValue(const int width); // {
+    //   Value* v = new Value(context.arrayType(width));
+    //   values.insert(v);
+    //   return v;
+    // }
+
+    Value* unsignedDivide(Value* a, Value* b) {
+      assert(sameWidth(*a, *b));
+
+      std::string divideName = "unsigned_divide_" + std::to_string(a->bitWidth());
+      Value* freshValue = makeUniqueValue(a->bitWidth());
+      statements.push_back(new FunctionCall(divideName, freshValue, {{"in0", a}, {"in1", b}}));
+      return freshValue;
+    }
+
+    Value* zeroExtend(const int resWidth, Value* v) {
+      std::string divideName = "zero_extend_" + std::to_string(resWidth);
+
+      Value* freshValue = makeUniqueValue(resWidth);
+      statements.push_back(new FunctionCall(divideName, freshValue, {{"in", v}}));
+      return freshValue;
+    }
+
+    Value* shiftLeft(const int shiftValue, Value const * const v) {
+      //statements.push_back(new FunctionCall());
+      return nullptr;
+    }
+    
     Value* addSlice(const int end, const int start, Value* v) {
-      statements.push_back(new FunctionCall());
+      //statements.push_back(new FunctionCall());
       return nullptr;
     }
 
     Value* addEquals(const Value* a, const Value* b) {
-      statements.push_back(new FunctionCall());
+      //statements.push_back(new FunctionCall());
       return nullptr;
     }
 
@@ -150,6 +212,10 @@ namespace FuncGen {
     ~Function() {
       for (auto stmt : statements) {
         delete stmt;
+      }
+
+      for (auto value : values) {
+        delete value;
       }
     }
 
@@ -177,7 +243,7 @@ namespace FuncGen {
     Function* newFunction(const std::string& name,
                           const std::map<std::string, Data*>& inputs,
                           const std::map<std::string, Data*>& outputs) {
-      auto f = new Function(name, inputs, outputs);
+      auto f = new Function(*this, name, inputs, outputs);
       functions.insert({name, f});
       return f;
     }
