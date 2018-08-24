@@ -39,7 +39,12 @@ namespace FuncGen {
       return bitLength;
     }
   };
-  
+
+  enum ValueType {
+    VALUE_TYPE_VAR,
+    VALUE_TYPE_CONST,
+  };
+
   class Value {
 
     Data* dataType;
@@ -48,9 +53,31 @@ namespace FuncGen {
 
     Value(Data* dataType_) : dataType(dataType_) {}
 
+    virtual ValueType type() const {
+      return VALUE_TYPE_VAR;
+    }
+
     int bitWidth() const {
       return dataType->bitWidth();
     }
+
+    virtual ~Value() {}
+  };
+
+  class ConstantValue : public Value {
+    BitVector val;
+
+  public:
+    ConstantValue(Data* dataType_, const BitVector& val_) : Value(dataType_), val(val_) {}
+
+    virtual ValueType type() const {
+      return VALUE_TYPE_CONST;
+    }
+
+    BitVector getValue() const {
+      return val;
+    }
+    
   };
 
   static inline bool sameWidth(const Value& a, const Value& b) {
@@ -215,6 +242,9 @@ namespace FuncGen {
     Value* makeUniqueValue(const int width);
 
     Value* unsignedDivide(Value* a, Value* b) {
+      assert(a != nullptr);
+      assert(b != nullptr);
+
       assert(sameWidth(*a, *b));
 
       std::string divideName = "unsigned_divide_" + std::to_string(a->bitWidth());
@@ -270,9 +300,14 @@ namespace FuncGen {
       return nullptr;
     }
 
-    Value* addConstant(const int bitWidth, const int Value) {
-      return nullptr;
-    }
+    Value* addConstant(const int bitWidth, const int value);
+    //   ConstantValue* v = new ConstantValue(context.arrayType(bitWidth),
+    //                                        BitVector(bitWidth, value));
+                                           
+    //   values.insert({"const_" + std::to_string(uniqueNum), v});
+    //   uniqueNum++;
+    //   return v;
+    // }
 
     void setReturn(const std::string& returnName, const Value* value) {
       statements.push_back(new ReturnStmt());

@@ -95,9 +95,14 @@ namespace FuncGen {
     }
 
     BitVector getValue(Value* v) const {
-      assert(contains_key(v, variableValues));
+      if (v->type() == VALUE_TYPE_VAR) {
+        assert(contains_key(v, variableValues));
       
-      return map_find(v, variableValues);
+        return map_find(v, variableValues);
+      } else {
+        assert(v->type() == VALUE_TYPE_CONST);
+        return static_cast<ConstantValue*>(v)->getValue();
+      }
     }
 
     void setInput(const std::string& inputName, const BitVector& value) {

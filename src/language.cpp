@@ -12,4 +12,13 @@ namespace FuncGen {
     return v;
   }
 
+  Value* Function::addConstant(const int bitWidth, const int value) {
+    ConstantValue* v = new ConstantValue(context.arrayType(bitWidth),
+                                         BitVector(bitWidth, value));
+                                           
+    values.insert({"const_" + std::to_string(uniqueNum), v});
+    uniqueNum++;
+    return v;
+  }
+  
 }

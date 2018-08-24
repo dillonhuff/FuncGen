@@ -71,6 +71,35 @@ namespace FuncGen {
 
   }
 
+  TEST_CASE("Fixed point one divided by x") {
+    int width = 8;
+    Context c;
+    Function* divOne =
+      c.newFunction("divide_one_by_x_8",
+                    {{"x", c.arrayType(width)}},
+                    {{"quotient", c.arrayType(width)}});
+
+    // Q: What is the process?
+    // 1. Create value one constant of width (w + 1), then shift so that the
+    //    one is in the last place.
+    // 2. Zero extend the input
+    // 3. Do unsigned division
+    // 4. Slice away the last bit
+
+    auto zeroInFixedPoint = divOne->addConstant(width + 1, 1 << width);
+    auto divisor = divOne->zeroExtend(width + 1, divOne->getValue("x"));
+    auto initQuotient = divOne->unsignedDivide(zeroInFixedPoint, divisor);
+    auto finalQuote = divOne->slice(width - 1, 0, initQuotient);
+    divOne->assign(divOne->getValue("quotient"), finalQuote);
+
+    Simulator sim(*divOne);
+    sim.setInput("x", BitVector(width, 2));
+
+    sim.evaluate();
+
+    REQUIRE(sim.getOutput("quotient") == BitVector(width, "10000000"));
+  }
+
   TEST_CASE("Lookup table based division") {
     int width = 8;
 
