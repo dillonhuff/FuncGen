@@ -45,15 +45,30 @@ namespace FuncGen {
 
     udiv->assign(udiv->getValue("quotient"), sliceRes);
 
-    Simulator sim(*udiv);
-    sim.setInput("a", BitVector(width, 8));
-    sim.setInput("b", BitVector(width, 2));
+    SECTION("8 divided by 2") {
+      Simulator sim(*udiv);
+      sim.setInput("a", BitVector(width, 8));
+      sim.setInput("b", BitVector(width, 2));
 
-    sim.evaluate();
+      sim.evaluate();
 
-    sim.printValueStore();
+      sim.printValueStore();
 
-    REQUIRE(sim.getOutput("quotient") == BitVector(width, "00000100"));
+      REQUIRE(sim.getOutput("quotient") == BitVector(width, "00000100"));
+    }
+
+    SECTION("19 divided by 5") {
+      Simulator sim(*udiv);
+      sim.setInput("a", BitVector(width, 19));
+      sim.setInput("b", BitVector(width, 5));
+
+      sim.evaluate();
+
+      sim.printValueStore();
+
+      REQUIRE(sim.getOutput("quotient") == BitVector(width, 19 / 5));
+    }
+
   }
 
   TEST_CASE("Lookup table based division") {

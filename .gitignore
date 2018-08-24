@@ -1,0 +1,4 @@
+*~
+*.a
+*.cmake
+all-tests
