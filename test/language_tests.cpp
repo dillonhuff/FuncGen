@@ -144,12 +144,25 @@ namespace FuncGen {
     auto rt = udiv->logicalShiftRight(width, res);
     udiv->assign(udiv->getValue("quotient"), udiv->slice(width - 1, 0, rt));
 
-    Simulator sim(*udiv);
-    sim.setInput("a", BitVector(width, 10));
-    sim.setInput("b", BitVector(width, 3));
+    SECTION("10 / 3 == 3") {
+      Simulator sim(*udiv);
+      sim.setInput("a", BitVector(width, 10));
+      sim.setInput("b", BitVector(width, 3));
 
-    sim.evaluate();
+      sim.evaluate();
 
-    REQUIRE(sim.getOutput("quotient") == BitVector(width, 3));
+      REQUIRE(sim.getOutput("quotient") == BitVector(width, 3));
+    }
+
+    SECTION("129 / 8") {
+      Simulator sim(*udiv);
+      sim.setInput("a", BitVector(width, 129));
+      sim.setInput("b", BitVector(width, 8));
+
+      sim.evaluate();
+
+      REQUIRE(sim.getOutput("quotient") == BitVector(width, 129 / 8));
+    }
+
   }
 }

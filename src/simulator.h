@@ -4,39 +4,6 @@
 
 namespace FuncGen {
 
-  static inline
-  bsim::quad_value_bit_vector unsigned_divide(const BitVector& a,
-                                              const BitVector& b) {
-    assert(a.bitLength() == b.bitLength());
-
-    BitVector extA = zero_extend(2*a.bitLength(), a);
-    BitVector extB = zero_extend(2*b.bitLength(), b);
-
-    BitVector quotient(a.bitLength(), 0);
-    BitVector a_tmp = extA;
-
-    std::cout << "a = " << extA << std::endl;
-    std::cout << "b = " << extB << std::endl;
-
-    // Use slow divide method
-    for (int i = (a.bitLength() - 1); i >= 0; i--) {
-      BitVector shifted_b = shl(extB, BitVector(b.bitLength(), i));
-
-      std::cout << "Shifted b = " << shifted_b << std::endl;
-      std::cout << "a_tmp     = " << a_tmp << std::endl;
-
-      if ((shifted_b < a_tmp) || (shifted_b == a_tmp)) {
-        quotient.set(i, quad_value(1));
-        a_tmp = sub_general_width_bv(a_tmp, shifted_b);
-      }
-
-      std::cout << "Final quotient = " << quotient << std::endl;
-    }
-
-    std::cout << "Final quotient = " << quotient << std::endl;
-
-    return quotient;
-  }
 
   bool hasPrefix(const std::string& name, const std::string& prefix) {
     return name.substr(0, prefix.size()) == prefix;
@@ -48,17 +15,10 @@ namespace FuncGen {
 
   static inline bool isUnsignedDivide(const std::string& name) {
     return hasPrefix(name, "unsigned_divide_");
-
-    // std::cout << "Name = " << name << std::endl;
-    // std::cout << "sub  = " << name.substr(0, 16) << std::endl;
-    // return name.substr(0, 16) == "unsigned_divide_";
   }
 
   static inline bool isShiftLeft(const std::string& name) {
     return hasPrefix(name, "shift_left_");
-    // std::cout << "Name = " << name << std::endl;
-    // std::cout << "sub  = " << name.substr(0, 16) << std::endl;
-    // return name.substr(0, 16) == "shift_left_";
   }
   
   class Simulator {
@@ -171,7 +131,6 @@ namespace FuncGen {
 
         setValue(res, lshr(getValue(toShift), BitVector(32, shiftAmount)));
       } else {
-        std::cout << "ERROR: Unsupported function name " << name << std::endl;
         Function* toCall = f.getContext().getFunction(name);
 
         Simulator s(*toCall);
