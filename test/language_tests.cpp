@@ -7,6 +7,26 @@ using namespace std;
 
 namespace FuncGen {
 
+  TEST_CASE("Zero extend") {
+    int width = 8;
+
+    Context c;
+    Function* udiv =
+      c.newFunction("zero_extend_by_5",
+                    {{"a", c.arrayType(width)}},
+                    {{"res", c.arrayType(width + 5)}});
+
+    Value* aExt = udiv->zeroExtend(width + 5, udiv->getValue("a"));
+    udiv->assign(udiv->getValue("res"), aExt);
+
+    Simulator sim(*udiv);
+    sim.setInput("a", BitVector(width, 1));
+
+    sim.evaluate();
+
+    REQUIRE(sim.getOutput("res") == BitVector(width + 5, "0000000000001"));
+  }
+
   TEST_CASE("Fixed point divide") {
     int width = 8;
 
@@ -22,6 +42,7 @@ namespace FuncGen {
     Value* tempRes = udiv->unsignedDivide(aExt, bExt);
     
     Value* result = udiv->shiftLeft(1, tempRes);
+    udiv->assign(udiv->getValue("quotient"), udiv->slice(width - 1, 0, result));
 
     Simulator sim(*udiv);
     sim.setInput("a", BitVector(width, 1));

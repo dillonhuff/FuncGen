@@ -57,11 +57,16 @@ namespace FuncGen {
     return a.bitWidth() == b.bitWidth();
   }
 
+  static inline bool sameWidth(const Value* a, const Value* b) {
+    return sameWidth(*a, *b);
+  }
+  
   enum StatementType {
     STATEMENT_TYPE_FUNCTION_CALL,
     STATEMENT_TYPE_CASE,
     STATEMENT_TYPE_OPERATOR,
     STATEMENT_TYPE_RETURN,
+    STATEMENT_TYPE_ASSIGNMENT,
   };
 
   class Statement {
@@ -91,20 +96,52 @@ namespace FuncGen {
     }
   };
 
+  class Assignment : public Statement {
+    Value* lhs;
+    Value* rhs;
+
+  public:
+
+    Assignment(Value* a, Value* b) : lhs(a), rhs(b) {}
+
+    Value* getLHS() const {
+      return lhs;
+    }
+
+    Value* getRHS() const {
+      return rhs;
+    }
+    
+    virtual StatementType type() const {
+      return STATEMENT_TYPE_ASSIGNMENT;
+    }
+    
+  };
+
   class FunctionCall : public Statement {
     std::string funcName;
     Value* result;
 
-    //std::map<std::string, Value*> inputs;
+    std::map<std::string, Value*> inputs;
     
   public:
     FunctionCall(const std::string& funcName_,
                  Value* result_,
                  const std::map<std::string, Value*>& inputs_) :
-      funcName(funcName_), result(result_) {}
+      funcName(funcName_), result(result_), inputs(inputs_) {}
 
     Value* getResult() const {
       return result;
+    }
+
+    Value* getInput(const std::string& name) const {
+      assert(contains_key(name, inputs));
+
+      return map_find(name, inputs);
+    }
+
+    std::string functionName() const {
+      return funcName;
     }
 
     virtual StatementType type() const {
@@ -120,31 +157,48 @@ namespace FuncGen {
   };
   
   class Function {
+    int uniqueNum;
+
     Context& context;
 
     std::string name;
     std::vector<Statement*> statements;
-    std::map<std::string, Data*> inputs;
-    std::map<std::string, Data*> outputs;
+    std::map<std::string, Value*> inputs;
+    std::map<std::string, Value*> outputs;
 
-    std::set<Value*> values;
+    std::map<std::string, Value*> values;
     
   public:
 
     Function(Context& context_,
              const std::string& name_,
              const std::map<std::string, Data*>& inputs_,
-             const std::map<std::string, Data*>& outputs_) : context(context_), name(name_), inputs(inputs_), outputs(outputs_) {}
+             const std::map<std::string, Data*>& outputs_) :
+      uniqueNum(1), context(context_), name(name_) {
+
+      for (auto in : inputs_) {
+        Value* v = new Value(in.second);
+        inputs.insert({in.first, v});
+        values.insert({in.first, v});
+      }
+
+      for (auto out : outputs_) {
+        Value* v = new Value(out.second);
+        outputs.insert({out.first, v});
+        values.insert({out.first, v});
+      }
+
+    }
 
     std::string getName() const {
       return name;
     }
 
-    const std::map<std::string, Data*>& inputMap() const {
+    std::map<std::string, Value*>& inputMap() {
       return inputs;
     }
 
-    const std::map<std::string, Data*>& outputMap() const {
+    std::map<std::string, Value*>& outputMap() {
       return outputs;
     }
 
@@ -155,14 +209,10 @@ namespace FuncGen {
     Value* addFunctionCall(const std::string& str);
 
     Value* getValue(const std::string& name) {
-      return nullptr;
+      return map_find(name, values);
     }
 
-    Value* makeUniqueValue(const int width); // {
-    //   Value* v = new Value(context.arrayType(width));
-    //   values.insert(v);
-    //   return v;
-    // }
+    Value* makeUniqueValue(const int width);
 
     Value* unsignedDivide(Value* a, Value* b) {
       assert(sameWidth(*a, *b));
@@ -174,21 +224,40 @@ namespace FuncGen {
     }
 
     Value* zeroExtend(const int resWidth, Value* v) {
-      std::string divideName = "zero_extend_" + std::to_string(resWidth);
+      std::string zextName = "zero_extend_" + std::to_string(resWidth);
 
       Value* freshValue = makeUniqueValue(resWidth);
-      statements.push_back(new FunctionCall(divideName, freshValue, {{"in", v}}));
+      statements.push_back(new FunctionCall(zextName, freshValue, {{"in", v}}));
       return freshValue;
     }
 
-    Value* shiftLeft(const int shiftValue, Value const * const v) {
-      //statements.push_back(new FunctionCall());
-      return nullptr;
+    Value* shiftLeft(const int shiftValue, Value* v) {
+      std::string shiftName = "shift_left_" + std::to_string(shiftValue);
+
+      Value* freshValue = makeUniqueValue(v->bitWidth());
+      statements.push_back(new FunctionCall(shiftName, freshValue, {{"in", v}}));
+
+      return freshValue;
+    }
+
+    void assign(Value* a, Value* b) {
+      assert(a != nullptr);
+      assert(b != nullptr);
+      if (!sameWidth(*a, *b)) {
+        std::cout << "ERROR: Mismatched widths in assign " << a->bitWidth() << " and " << b->bitWidth() << std::endl;
+        assert(false);
+      }
+
+      statements.push_back(new Assignment(a, b));
     }
     
-    Value* addSlice(const int end, const int start, Value* v) {
-      //statements.push_back(new FunctionCall());
-      return nullptr;
+    Value* slice(const int end, const int start, Value* v) {
+      std::string shiftName = "slice_" + std::to_string(end) + "_" + std::to_string(start);
+
+      Value* freshValue = makeUniqueValue(end - start + 1);
+      statements.push_back(new FunctionCall(shiftName, freshValue, {{"in", v}}));
+
+      return freshValue;
     }
 
     Value* addEquals(const Value* a, const Value* b) {
@@ -215,7 +284,7 @@ namespace FuncGen {
       }
 
       for (auto value : values) {
-        delete value;
+        delete value.second;
       }
     }
 

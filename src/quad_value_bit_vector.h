@@ -7,7 +7,6 @@
 #include <stdint.h>
 #include <type_traits>
 #include <vector>
-
 // This is a comment
 
 typedef int8_t  bv_sint8;
