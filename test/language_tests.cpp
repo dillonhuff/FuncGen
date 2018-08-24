@@ -41,8 +41,8 @@ namespace FuncGen {
 
     Value* tempRes = udiv->unsignedDivide(aExt, bExt);
     
-    Value* result = udiv->shiftLeft(1, tempRes);
-    udiv->assign(udiv->getValue("quotient"), udiv->slice(width - 1, 0, result));
+    //Value* result = udiv->shiftLeft(1, tempRes);
+    udiv->assign(udiv->getValue("quotient"), udiv->slice(width - 1, 0, tempRes));
 
     Simulator sim(*udiv);
     sim.setInput("a", BitVector(width, 1));
