@@ -40,10 +40,21 @@ namespace FuncGen {
     }
   };
 
-  enum ValueType {
-    VALUE_TYPE_VAR,
-    VALUE_TYPE_CONST,
+
+  enum ExpressionType {
+    EXPRESSION_TYPE_FUNCTION_CALL,
+    EXPRESSION_TYPE_CONSTANT,
+    EXPRESSION_TYPE_VARIABLE,
+    EXPRESSION_TYPE_CASE,
   };
+
+  // class Expression {
+  // };
+
+  // enum ValueType {
+  //   VALUE_TYPE_VAR,
+  //   VALUE_TYPE_CONST,
+  // };
 
   class Value {
 
@@ -88,11 +99,6 @@ namespace FuncGen {
     return sameWidth(*a, *b);
   }
 
-  class Table {
-  public:
-    
-  };
-  
   enum StatementType {
     STATEMENT_TYPE_FUNCTION_CALL,
     STATEMENT_TYPE_CASE,
@@ -276,6 +282,10 @@ namespace FuncGen {
     
     std::vector<Statement*> getStatements() const {
       return statements;
+    }
+
+    Statement* assignStmt(Value* res, Expression* expr) {
+      
     }
 
     Value* caseStatement(Value* in, const std::vector<std::pair<BitVector, BitVector> >& cases);
