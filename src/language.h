@@ -393,7 +393,7 @@ namespace FuncGen {
       std::string shiftName = "slice_" + std::to_string(end) + "_" + std::to_string(start);
 
       Value* freshValue = makeUniqueValue(end - start + 1);
-      statements.push_back(new FunctionCall(shiftName, freshValue, {{"in", v}}));
+      statements.push_back(new Assignment(freshValue, new FunctionCall(shiftName, {{"in", v}})));
 
       return freshValue;
     }
