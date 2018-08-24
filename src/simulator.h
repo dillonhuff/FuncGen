@@ -5,6 +5,7 @@
 namespace FuncGen {
 
 
+  static inline
   bool hasPrefix(const std::string& name, const std::string& prefix) {
     return name.substr(0, prefix.size()) == prefix;
   }
@@ -147,10 +148,24 @@ namespace FuncGen {
       }
     }
 
-    void evaluateStatement(const Statement& stmt) {
+    void evaluateStatement(Statement& stmt) {
       if (stmt.type() == STATEMENT_TYPE_FUNCTION_CALL) {
         const FunctionCall& call = static_cast<const FunctionCall&>(stmt);
         evaluateFunctionCall(call);
+      } else if (stmt.type() == STATEMENT_TYPE_CASE) {
+        Case& assign = static_cast<Case&>(stmt);
+
+        Value* input = assign.getInput();
+        BitVector inVal = getValue(input);
+        for (auto c : assign.getCases()) {
+          if (inVal == c.first) {
+            setValue(assign.getResult(), c.second);
+            return;
+          }
+        }
+
+        assert(false);
+
       } else {
         assert(stmt.type() == STATEMENT_TYPE_ASSIGNMENT);
         const Assignment& assign = static_cast<const Assignment&>(stmt);

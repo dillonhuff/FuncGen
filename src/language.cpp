@@ -1,8 +1,18 @@
 #include "language.h"
+#include "simulator.h"
 
 using namespace std;
 
 namespace FuncGen {
+
+  Value*
+  Function::caseStatement(Value* in, const std::vector<std::pair<BitVector, BitVector> >& cases) {
+    assert(cases.size() > 0);
+    int resWidth = cases.at(0).second.bitLength();
+    Value* freshValue = makeUniqueValue(resWidth);
+    statements.push_back(new Case(freshValue, in, cases));
+    return freshValue;
+  }
 
   Value* Function::makeUniqueValue(const int width) {
     Value* v = new Value(context.arrayType(width));
@@ -46,6 +56,9 @@ namespace FuncGen {
     assert(f->inputMap().size() == 1);
     assert(f->outputMap().size() == 1);
 
+    string inputName = (*begin(f->inputMap())).first;
+    string outName = (*begin(f->outputMap())).first;
+    
     int inWidth = (*begin(f->inputMap())).second->bitWidth();
     int outWidth = (*begin(f->outputMap())).second->bitWidth();
 
@@ -53,7 +66,21 @@ namespace FuncGen {
                                     {{"in", c.arrayType(inWidth)}},
                                     {{"out", c.arrayType(outWidth)}});
 
-    auto res = table->functionCall(f->getName(), table->getValue("in"));
+    Simulator sim(*f);
+    vector<pair<BitVector, BitVector> > resultsTable;
+    for (int i = 0; i < pow(2, inWidth); i++) {
+      cout << i << endl;
+      BitVector in(inWidth, i);
+      sim.setInput(inputName, in);
+      sim.evaluate();
+      BitVector out = sim.getOutput(outName);
+
+      resultsTable.push_back({in, out});
+    }
+
+    auto res = table->caseStatement(table->getValue("in"), resultsTable);
+
+    // auto res = table->functionCall(f->getName(), table->getValue("in"));
     table->assign(table->getValue("out"), res);
 
     return table;

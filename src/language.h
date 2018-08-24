@@ -114,7 +114,29 @@ namespace FuncGen {
   };
 
   class Case : public Statement {
+    Value* result;
+    Value* in;
+    std::vector<std::pair<BitVector, BitVector> > cases;
+
   public:
+
+    Case(Value* result_,
+         Value* in_,
+         const std::vector<std::pair<BitVector, BitVector> >& cases_) :
+      result(result_), in(in_), cases(cases_) {}
+
+    Value* getResult() const {
+      return result;
+    }
+
+    Value* getInput() const {
+      return in;
+    }
+    
+    std::vector<std::pair<BitVector, BitVector> >& getCases() {
+      return cases;
+    }
+
     virtual StatementType type() const {
       return STATEMENT_TYPE_CASE;
     }
@@ -256,6 +278,8 @@ namespace FuncGen {
       return statements;
     }
 
+    Value* caseStatement(Value* in, const std::vector<std::pair<BitVector, BitVector> >& cases);
+
     Value* functionCall(const std::string& str, const std::map<std::string, Value*>& args);
     Value* functionCall(const std::string& str, Value* arg);
 
@@ -340,10 +364,10 @@ namespace FuncGen {
       return nullptr;
     }
 
-    Value* addCase(const Value* res, const Value* ifTrue, const Value* ifFalse) {
-      statements.push_back(new Case());
-      return nullptr;
-    }
+    // Value* addCase(const Value* res, const Value* ifTrue, const Value* ifFalse) {
+    //   statements.push_back(new Case());
+    //   return nullptr;
+    // }
 
     Value* addConstant(const int bitWidth, const int value);
     //   ConstantValue* v = new ConstantValue(context.arrayType(bitWidth),
