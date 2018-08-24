@@ -51,29 +51,31 @@ namespace FuncGen {
   // class Expression {
   // };
 
-  // enum ValueType {
+  // enum ExpressionType {
   //   VALUE_TYPE_VAR,
   //   VALUE_TYPE_CONST,
   // };
 
-  class Value {
+  class Expression {
 
     Data* dataType;
 
   public:
 
-    Value(Data* dataType_) : dataType(dataType_) {}
+    Expression(Data* dataType_) : dataType(dataType_) {}
 
-    virtual ValueType type() const {
-      return VALUE_TYPE_VAR;
+    virtual ExpressionType type() const {
+      return EXPRESSION_TYPE_VARIABLE;
     }
 
     int bitWidth() const {
       return dataType->bitWidth();
     }
 
-    virtual ~Value() {}
+    virtual ~Expression() {}
   };
+
+  typedef Expression Value;
 
   class ConstantValue : public Value {
     BitVector val;
@@ -81,8 +83,8 @@ namespace FuncGen {
   public:
     ConstantValue(Data* dataType_, const BitVector& val_) : Value(dataType_), val(val_) {}
 
-    virtual ValueType type() const {
-      return VALUE_TYPE_CONST;
+    virtual ExpressionType type() const {
+      return EXPRESSION_TYPE_CONSTANT;
     }
 
     BitVector getValue() const {
@@ -178,21 +180,23 @@ namespace FuncGen {
     
   };
 
-  class FunctionCall : public Statement {
+  //class FunctionCall : public Statement {
+  class FunctionCall : public Expression {
     std::string funcName;
-    Value* result;
+    //    Value* result;
 
     std::map<std::string, Value*> inputs;
     
   public:
     FunctionCall(const std::string& funcName_,
-                 Value* result_,
+                 //Value* result_,
                  const std::map<std::string, Value*>& inputs_) :
-      funcName(funcName_), result(result_), inputs(inputs_) {}
+      funcName(funcName_), //result(result_),
+      inputs(inputs_) {}
 
-    Value* getResult() const {
-      return result;
-    }
+    // Value* getResult() const {
+    //   return result;
+    // }
 
     const std::map<std::string, Value*>& getInputs() const {
       return inputs;
@@ -208,8 +212,8 @@ namespace FuncGen {
       return funcName;
     }
 
-    virtual StatementType type() const {
-      return STATEMENT_TYPE_FUNCTION_CALL;
+    virtual ExpressionType type() const {
+      return EXPRESSION_TYPE_FUNCTION_CALL;
     }
   };
 
@@ -285,7 +289,7 @@ namespace FuncGen {
     }
 
     Statement* assignStmt(Value* res, Expression* expr) {
-      
+      return new Assignment(res, expr);
     }
 
     Value* caseStatement(Value* in, const std::vector<std::pair<BitVector, BitVector> >& cases);
@@ -307,7 +311,8 @@ namespace FuncGen {
 
       std::string divideName = "unsigned_divide_" + std::to_string(a->bitWidth());
       Value* freshValue = makeUniqueValue(a->bitWidth());
-      statements.push_back(new FunctionCall(divideName, freshValue, {{"in0", a}, {"in1", b}}));
+      statements.push_back(new Assignment(freshValue,
+                                          new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
       return freshValue;
     }
 
@@ -319,7 +324,7 @@ namespace FuncGen {
 
       std::string divideName = "multiply_" + std::to_string(a->bitWidth());
       Value* freshValue = makeUniqueValue(a->bitWidth());
-      statements.push_back(new FunctionCall(divideName, freshValue, {{"in0", a}, {"in1", b}}));
+      statements.push_back(new Assignment(freshValue, new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
       return freshValue;
     }
 
@@ -331,7 +336,7 @@ namespace FuncGen {
 
       std::string divideName = "subtract_" + std::to_string(a->bitWidth());
       Value* freshValue = makeUniqueValue(a->bitWidth());
-      statements.push_back(new FunctionCall(divideName, freshValue, {{"in0", a}, {"in1", b}}));
+      statements.push_back(new Assignment(freshValue, new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
       return freshValue;
     }
 
@@ -343,7 +348,7 @@ namespace FuncGen {
 
       std::string divideName = "add_" + std::to_string(a->bitWidth());
       Value* freshValue = makeUniqueValue(a->bitWidth());
-      statements.push_back(new FunctionCall(divideName, freshValue, {{"in0", a}, {"in1", b}}));
+      statements.push_back(new Assignment(freshValue, new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
       return freshValue;
     }
     
@@ -351,7 +356,7 @@ namespace FuncGen {
       std::string zextName = "zero_extend_" + std::to_string(resWidth);
 
       Value* freshValue = makeUniqueValue(resWidth);
-      statements.push_back(new FunctionCall(zextName, freshValue, {{"in", v}}));
+      statements.push_back(new Assignment(freshValue, new FunctionCall(zextName, {{"in", v}})));
       return freshValue;
     }
 
@@ -359,7 +364,7 @@ namespace FuncGen {
       std::string shiftName = "shift_left_" + std::to_string(shiftValue);
 
       Value* freshValue = makeUniqueValue(v->bitWidth());
-      statements.push_back(new FunctionCall(shiftName, freshValue, {{"in", v}}));
+      statements.push_back(new Assignment(freshValue, new FunctionCall(shiftName, {{"in", v}})));
 
       return freshValue;
     }
@@ -368,7 +373,7 @@ namespace FuncGen {
       std::string shiftName = "logical_shift_right_" + std::to_string(shiftValue);
 
       Value* freshValue = makeUniqueValue(v->bitWidth());
-      statements.push_back(new FunctionCall(shiftName, freshValue, {{"in", v}}));
+      statements.push_back(new Assignment(freshValue, new FunctionCall(shiftName, {{"in", v}})));
 
       return freshValue;
     }
@@ -391,6 +396,11 @@ namespace FuncGen {
       statements.push_back(new FunctionCall(shiftName, freshValue, {{"in", v}}));
 
       return freshValue;
+    }
+
+    Expression* plusExpr(Value* a, Value* b) {
+      return new FunctionCall("add_" + std::to_string(a->bitWidth()),
+                              {{"in0", a}, {"in1", b}});
     }
 
     Value* addEquals(const Value* a, const Value* b) {

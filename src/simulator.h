@@ -56,12 +56,12 @@ namespace FuncGen {
     }
 
     BitVector getValue(Value* v) const {
-      if (v->type() == VALUE_TYPE_VAR) {
+      if (v->type() == EXPRESSION_TYPE_VARIABLE) {
         assert(contains_key(v, variableValues));
       
         return map_find(v, variableValues);
       } else {
-        assert(v->type() == VALUE_TYPE_CONST);
+        assert(v->type() == EXPRESSION_TYPE_CONSTANT);
         return static_cast<ConstantValue*>(v)->getValue();
       }
     }
