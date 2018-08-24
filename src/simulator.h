@@ -155,7 +155,19 @@ namespace FuncGen {
         setValue(res, sliceRes);
       } else {
         std::cout << "ERROR: Unsupported function name " << name << std::endl;
-        assert(false);
+        Function* toCall = f.getContext().getFunction(name);
+
+        Simulator s(*toCall);
+        for (auto input : call.getInputs()) {
+          s.setInput(input.first, getValue(input.second));
+        }
+        s.evaluate();
+
+        std::cout << "Output result = " << s.getOutput(toCall->outputValueName()) << std::endl;
+
+        setValue(call.getResult(), s.getOutput(toCall->outputValueName()));
+
+        //assert(false);
       }
     }
 

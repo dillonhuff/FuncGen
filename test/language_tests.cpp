@@ -71,11 +71,9 @@ namespace FuncGen {
 
   }
 
-  TEST_CASE("Fixed point one divided by x") {
-    int width = 8;
-    Context c;
+  Function* buildDivideByOne(const int width, Context& c) {
     Function* divOne =
-      c.newFunction("divide_one_by_x_8",
+      c.newFunction("divide_one_by_x_" + std::to_string(width),
                     {{"x", c.arrayType(width)}},
                     {{"quotient", c.arrayType(width)}});
 
@@ -91,6 +89,14 @@ namespace FuncGen {
     auto initQuotient = divOne->unsignedDivide(zeroInFixedPoint, divisor);
     auto finalQuote = divOne->slice(width - 1, 0, initQuotient);
     divOne->assign(divOne->getValue("quotient"), finalQuote);
+
+    return divOne;
+  }
+
+  TEST_CASE("Fixed point one divided by x") {
+    int width = 8;
+    Context c;
+    Function* divOne = buildDivideByOne(width, c);
 
     SECTION("1/2 == 0.5") {
       Simulator sim(*divOne);
@@ -112,7 +118,7 @@ namespace FuncGen {
 
   }
 
-  TEST_CASE("Lookup table based division") {
+  TEST_CASE("Lookup table based integer division") {
     int width = 8;
 
     Context c;
@@ -121,12 +127,22 @@ namespace FuncGen {
                     {{"a", c.arrayType(width)}, {"b", c.arrayType(width)}},
                     {{"quotient", c.arrayType(width)}});
 
+    // Implementation?
+    // 1. Compute f(b) = 1/b from a table of existing values
+    // 2. Compute a*f(b)
+    // 3. Shift a to the right width places
+    // 4. Correct for special cases like b == 1
+
+    // Critical Issue: Pre-computed tables. How do I express this concept?
+    Function* divByOne = buildDivideByOne(width, c);
+    auto fb = udiv->functionCall(divByOne->getName(), {{"x", udiv->getValue("b")}});
+
     Simulator sim(*udiv);
-    sim.setInput("a", BitVector(width, 8));
-    sim.setInput("b", BitVector(width, 2));
+    sim.setInput("a", BitVector(width, 10));
+    sim.setInput("b", BitVector(width, 3));
 
     sim.evaluate();
 
-    //REQUIRE(sim.getOutput("quotient") == BitVector(width, 4));
+    REQUIRE(sim.getOutput("quotient") == BitVector(width, 3));
   }
 }

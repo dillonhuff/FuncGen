@@ -161,6 +161,10 @@ namespace FuncGen {
       return result;
     }
 
+    const std::map<std::string, Value*>& getInputs() const {
+      return inputs;
+    }
+
     Value* getInput(const std::string& name) const {
       assert(contains_key(name, inputs));
 
@@ -217,6 +221,10 @@ namespace FuncGen {
 
     }
 
+    Context& getContext() {
+      return context;
+    }
+
     std::string getName() const {
       return name;
     }
@@ -229,11 +237,21 @@ namespace FuncGen {
       return outputs;
     }
 
+    Value* outputValue() const {
+      assert(outputs.size() == 1);
+      return (*std::begin(outputs)).second;
+    }
+
+    std::string outputValueName() const {
+      assert(outputs.size() == 1);
+      return (*std::begin(outputs)).first;
+    }
+    
     std::vector<Statement*> getStatements() const {
       return statements;
     }
 
-    Value* addFunctionCall(const std::string& str);
+    Value* functionCall(const std::string& str, const std::map<std::string, Value*>& args);
 
     Value* getValue(const std::string& name) {
       return map_find(name, values);
@@ -342,6 +360,10 @@ namespace FuncGen {
 
       }
       return map_find(width, datas);
+    }
+
+    Function* getFunction(const std::string& name) const {
+      return map_find(name, functions);
     }
 
     Function* newFunction(const std::string& name,

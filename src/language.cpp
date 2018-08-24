@@ -20,5 +20,12 @@ namespace FuncGen {
     uniqueNum++;
     return v;
   }
-  
+
+  Value* Function::functionCall(const std::string& str,
+                                const std::map<std::string, Value*>& args) {
+    Function* f = context.getFunction(str);
+    Value* freshValue = makeUniqueValue(f->outputValue()->bitWidth());
+    statements.push_back(new FunctionCall(str, freshValue, args));
+    return freshValue;
+  }
 }
