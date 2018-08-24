@@ -187,13 +187,13 @@ namespace FuncGen {
 
     auto x = f->subtract(c1, f->multiply(c2, f->getValue("D")));
 
-    // f->repeat(numIterations,
-    //           f->assignStmt(x,
-    //                         f->plusExpr(x,
-    //                                     f->timesExpr(x,
-    //                                                  f->subExpr(f->constant(width, 1),
-    //                                                             f->timesExpr(f->getValue("D"),
-    //                                                                          x))))));
+    f->repeat(numIterations,
+              f->assignStmt(x,
+                            f->plusExpr(x,
+                                        f->timesExpr(x,
+                                                     f->subExpr(f->constant(width, 1),
+                                                                f->timesExpr(f->getValue("D"),
+                                                                             x))))));
 
     auto res = f->multiply(f->getValue("N"), x);
     f->assign(f->getValue("quotient"), res);

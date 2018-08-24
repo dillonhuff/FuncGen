@@ -89,7 +89,7 @@ namespace FuncGen {
 
         std::string ss = "zero_extend_";
         int width = stoi(name.substr(ss.size()));
-        return zero_extend(width, getValue(a));
+        return zero_extend(width, evaluateExpression(a));
 
         //setValue(res, zero_extend(res->bitWidth(), getValue(a)));
       } else if (isUnsignedDivide(name)) {
@@ -98,7 +98,7 @@ namespace FuncGen {
 
         //Value* res = call.getResult();
 
-        return unsigned_divide(getValue(toDivide), getValue(divisor));
+        return unsigned_divide(evaluateExpression(toDivide), evaluateExpression(divisor));
         //setValue(res, unsigned_divide(getValue(toDivide), getValue(divisor)));
       } else if (isShiftLeft(name)) {
         std::string pre = "shift_left_";
@@ -108,7 +108,7 @@ namespace FuncGen {
 
         //Value* res = call.getResult();
 
-        return shl(getValue(toShift), BitVector(32, shiftAmount));
+        return shl(evaluateExpression(toShift), BitVector(32, shiftAmount));
         //setValue(res, shl(getValue(toShift), BitVector(32, shiftAmount)));
       } else if (hasPrefix(name, "multiply_")) {
         Value* toDivide = call.getInput("in0");
@@ -116,7 +116,7 @@ namespace FuncGen {
 
         //Value* res = call.getResult();
 
-        return mul_general_width_bv(getValue(toDivide), getValue(divisor));
+        return mul_general_width_bv(evaluateExpression(toDivide), evaluateExpression(divisor));
         //setValue(res, mul_general_width_bv(getValue(toDivide), getValue(divisor)));
         
       } else if (hasPrefix(name, "slice_")) {
@@ -129,7 +129,7 @@ namespace FuncGen {
 
         //Value* res = call.getResult();
 
-        auto sliceRes = slice(getValue(toShift), startSlice, endSlice + 1);
+        auto sliceRes = slice(evaluateExpression(toShift), startSlice, endSlice + 1);
         //std::cout << "SliceRes = " << sliceRes << std::endl;
         return sliceRes;
         //setValue(res, sliceRes);
@@ -141,14 +141,25 @@ namespace FuncGen {
 
         //Value* res = call.getResult();
 
-        return lshr(getValue(toShift), BitVector(32, shiftAmount));
+        return lshr(evaluateExpression(toShift), BitVector(32, shiftAmount));
       //setValue(res, lshr(getValue(toShift), BitVector(32, shiftAmount)));
+      } else if (hasPrefix(name, "add_")) {
+        Value* in0 = call.getInput("in0");
+        Value* in1 = call.getInput("in1");
+
+        return add_general_width_bv(evaluateExpression(in0), evaluateExpression(in1));
+
+      } else if (hasPrefix(name, "subtract_")) {
+        Value* in0 = call.getInput("in0");
+        Value* in1 = call.getInput("in1");
+
+        return sub_general_width_bv(evaluateExpression(in0), evaluateExpression(in1));
       } else {
         Function* toCall = f.getContext().getFunction(name);
 
         Simulator s(*toCall);
         for (auto input : call.getInputs()) {
-          s.setInput(input.first, getValue(input.second));
+          s.setInput(input.first, evaluateExpression(input.second));
         }
         s.evaluate();
 
@@ -173,10 +184,7 @@ namespace FuncGen {
     }
 
     void evaluateStatement(Statement& stmt) {
-      // if (stmt.type() == STATEMENT_TYPE_FUNCTION_CALL) {
-      //   const FunctionCall& call = static_cast<const FunctionCall&>(stmt);
-      //   evaluateFunctionCall(call);
-      // } else if (stmt.type() == STATEMENT_TYPE_CASE) {
+
       if (stmt.type() == STATEMENT_TYPE_CASE) {
         Case& assign = static_cast<Case&>(stmt);
 
@@ -191,6 +199,11 @@ namespace FuncGen {
 
         assert(false);
 
+      } else if (stmt.type() == STATEMENT_TYPE_REPEAT) {
+        const RepeatStmt& assign = static_cast<const RepeatStmt&>(stmt);
+        for (int i = 0; i < assign.numIterations(); i++) {
+          evaluateStatement(*(assign.body()));
+        }
       } else {
         assert(stmt.type() == STATEMENT_TYPE_ASSIGNMENT);
         const Assignment& assign = static_cast<const Assignment&>(stmt);

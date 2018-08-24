@@ -107,6 +107,7 @@ namespace FuncGen {
     STATEMENT_TYPE_OPERATOR,
     STATEMENT_TYPE_RETURN,
     STATEMENT_TYPE_ASSIGNMENT,
+    STATEMENT_TYPE_REPEAT,
   };
 
   class Statement {
@@ -223,6 +224,24 @@ namespace FuncGen {
     virtual StatementType type() const {
       return STATEMENT_TYPE_RETURN;
     }
+  };
+
+  class RepeatStmt : public Statement {
+    int numIters;
+    Statement* stmt;
+
+  public:
+    RepeatStmt(int numIterations_, Statement* stmt_) :
+      numIters(numIterations_), stmt(stmt_) {}
+
+    Statement* body() const { return stmt; }
+
+    int numIterations() const { return numIters; }
+
+    virtual StatementType type() const {
+      return STATEMENT_TYPE_REPEAT;
+    }
+    
   };
   
   class Function {
@@ -404,11 +423,25 @@ namespace FuncGen {
                               {{"in0", a}, {"in1", b}});
     }
 
+    Expression* subExpr(Value* a, Value* b) {
+      return new FunctionCall("subtract_" + std::to_string(a->bitWidth()),
+                              {{"in0", a}, {"in1", b}});
+    }
+    
+    Expression* timesExpr(Value* a, Value* b) {
+      return new FunctionCall("multiply_" + std::to_string(a->bitWidth()),
+                              {{"in0", a}, {"in1", b}});
+    }
+    
     Value* addEquals(const Value* a, const Value* b) {
       return nullptr;
     }
 
     Value* constant(const int bitWidth, const int value);
+
+    void repeat(const int numIterations, Statement* e) {
+      statements.push_back(new RepeatStmt(numIterations, e));
+    }
 
     void setReturn(const std::string& returnName, const Value* value) {
       statements.push_back(new ReturnStmt());
