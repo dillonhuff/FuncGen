@@ -7,6 +7,112 @@ using namespace std;
 
 namespace FuncGen {
 
+  class FixedPoint {
+  public:
+    BitVector bits;
+    int exponent;
+
+    int bitLength() const {
+      return bits.bitLength();
+    }
+  };
+
+  std::ostream& operator<<(std::ostream& out, const FixedPoint& n) {
+    for (int i = n.bitLength() - 1; i >= 0; i--) {
+      out << n.bits.get(i);
+      if (i == -n.exponent) {
+        out << ".";
+      }
+    }
+    return out;
+  }
+  
+  FixedPoint multiply(const FixedPoint& a, const FixedPoint& b) {
+    auto aBitsExt = zero_extend(2*a.bitLength(), a.bits);
+    auto bBitsExt = zero_extend(2*b.bitLength(), b.bits);
+    auto prodBits = mul_general_width_bv(aBitsExt, bBitsExt);
+    return {prodBits, b.exponent + a.exponent};
+  }
+
+  FixedPoint leftExtend(const FixedPoint& num) {
+    int lastOnePos = num.bitLength() - 1;
+    while (num.bits.get(lastOnePos).binary_value() != 1) {
+      lastOnePos--;
+    }
+
+    int shiftAmount = num.bitLength() - lastOnePos - 1;
+    
+    auto numShiftedBits = shl(num.bits, BitVector(32, shiftAmount));
+    auto numShiftedExp = num.exponent - shiftAmount;
+
+    FixedPoint shiftedNum{numShiftedBits, numShiftedExp};
+
+    return shiftedNum;
+  }
+
+  FixedPoint rightTruncate(int toTruncate, const FixedPoint& num) {
+    BitVector truncatedBits(num.bitLength() - toTruncate, 0);
+    for (int i = num.bitLength() - 1; i >= toTruncate; i--) {
+      truncatedBits.set(i - toTruncate, num.bits.get(i));
+    }
+    return {truncatedBits, num.exponent + toTruncate};
+  }
+
+  // Give max precision within range
+  FixedPoint divide(const FixedPoint& numE, const FixedPoint& denomE) {
+    auto num = FixedPoint{zero_extend(numE.bitLength()*2, numE.bits), numE.exponent};
+    auto denom = FixedPoint{zero_extend(denomE.bitLength()*2, denomE.bits), denomE.exponent};
+
+    cout << endl;
+    cout << "numerator   = " << num << endl;
+    cout << "denominator = " << denom << endl;
+
+    FixedPoint shiftedNum = leftExtend(num);
+    // int lastOnePos = num.bitLength() - 1;
+    // while (num.bits.get(lastOnePos).binary_value() != 1) {
+    //   lastOnePos--;
+    // }
+
+    // cout << "last one position in " << num << " is " << lastOnePos << endl;
+    // int shiftAmount = num.bitLength() - lastOnePos - 1;
+    
+    // auto numShiftedBits = shl(num.bits, BitVector(32, shiftAmount));
+    // auto numShiftedExp = num.exponent - shiftAmount;
+
+    // FixedPoint shiftedNum{numShiftedBits, numShiftedExp};
+    cout << "Shifted num = " << shiftedNum << endl;
+
+    // auto prodBits = mul_general_width_bv(aBitsExt, bBitsExt);
+    // return {prodBits, b.exponent + a.exponent};
+
+    return {unsigned_divide(shiftedNum.bits, denom.bits), shiftedNum.exponent - denom.exponent};
+  }
+  
+  FixedPoint add(const FixedPoint& a, const FixedPoint& b) {
+    assert(false);
+  }
+
+  FixedPoint subtract(const FixedPoint& a, const FixedPoint& b) {
+    assert(false);
+  }
+  
+  double approximateFixedPoint(const BitVector& bv, int binaryPlacePosition) {
+    double approx = 0;
+    for (int i = 0; i < (int) bv.bitLength(); i++) {
+      if (i >= binaryPlacePosition) {
+        approx += pow(2, i - binaryPlacePosition)*bv.get(i).binary_value();
+      } else {
+        approx += pow(2, -(binaryPlacePosition - i))*bv.get(i).binary_value();
+      }
+    }
+
+    return approx;
+  }
+
+  double fixedPointToDouble(const FixedPoint& fp) {
+    return approximateFixedPoint(fp.bits, -fp.exponent);
+  }
+
   TEST_CASE("Zero extend") {
     int width = 8;
 
@@ -169,6 +275,24 @@ namespace FuncGen {
 
   }
 
+  TEST_CASE("8 bit newton raphson experiment") {
+
+    FixedPoint f10{BitVector(8, 10), 0};
+    FixedPoint f3{BitVector(8, 3), 0};
+
+    FixedPoint f48{BitVector(8, 48), 0};
+    FixedPoint f17{BitVector(8, 17), 0};
+
+    auto quot = divide(f48, f17);
+    cout << "48 / 17 = " << divide(f48, f17) << endl;
+    cout << "quot*17 = " << fixedPointToDouble(quot)*17 << endl;
+
+    FixedPoint leq = rightTruncate(quot.bitLength() / 2, leftExtend(quot));
+    cout << "left extended quotient = " << leq << endl;
+    
+    assert(false);
+  }
+
   TEST_CASE("16 bit newton-raphson division") {
     int width = 16;
     Context c;
@@ -185,6 +309,17 @@ namespace FuncGen {
     auto c2 = f->unsignedDivide(f->constant(width, 32),
                                 f->constant(width, 17));
 
+    BitVector bv(width, 32);
+    BitVector bv0(width, 17);
+
+    cout << "32 = " << bv << endl;
+    cout << "17 = " << bv0 << endl;
+    auto quot = unsigned_divide(shl(bv, BitVector(32, 10)), bv0);
+    double approx = approximateFixedPoint(quot, 10);
+    cout << "Quotient c2 = " << quot << ", fixed point = " << approx << ", bv0*approx = " << bv0.to_type<int>()*approx << endl;
+
+    assert(false);
+    
     auto x = f->zeroExtend(2*width,
                            f->subtract(c1, f->multiply(c2, f->getValue("D"))));
 
