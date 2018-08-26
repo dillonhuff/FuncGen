@@ -7,6 +7,10 @@ using namespace std;
 
 namespace FuncGen {
 
+  int iRand(const int min, const int max) {
+    return min + (rand() % static_cast<int>(max - min + 1));
+  }
+
   double fRand(double fMin, double fMax) {
     double f = (double)rand() / RAND_MAX;
     return fMin + f * (fMax - fMin);
@@ -366,7 +370,7 @@ namespace FuncGen {
       sub_general_width_bv(add_general_width_bv(expA, expB),
                            BitVector(11, DOUBLE_BIAS));
 
-    cout << "tentativeExp = " << tentativeExp << ", int = " << tentativeExp.to_type<int>() << endl;
+    //cout << "tentativeExp = " << tentativeExp << ", int = " << tentativeExp.to_type<int>() << endl;
 
     // Extend precision and set implicit bit
     BitVector sigAExt = zero_extend(2*(sigA.bitLength() + 1), sigA);
@@ -375,7 +379,7 @@ namespace FuncGen {
     sigBExt.set(sigB.bitLength(), 1);
 
     BitVector sigProd = mul_general_width_bv(sigAExt, sigBExt);
-    cout << "sigProd = " << sigProd << endl;
+    //cout << "sigProd = " << sigProd << endl;
 
     if (sigProd.get(sigProd.bitLength() - 1).binary_value() == 1) {
       sigProd = lshr(sigProd, BitVector(32, 1));
@@ -388,7 +392,7 @@ namespace FuncGen {
 
     if (R*((M0 + S)) != 0) {
       BitVector roundOne(53*2, 0);
-      cout << "Rounding" << endl;
+      //cout << "Rounding" << endl;
       roundOne.set(52, 1);
 
       assert(roundOne.bitLength() == sigProd.bitLength());
@@ -396,7 +400,7 @@ namespace FuncGen {
       sigProd = add_general_width_bv(sigProd, roundOne);
     }
 
-    cout << "Normalized sigProd = " << sigProd << endl;
+    //cout << "Normalized sigProd = " << sigProd << endl;
 
     // TODO: Add re-normalization!!!!
 
@@ -413,7 +417,7 @@ namespace FuncGen {
       result.set(52 + i, tentativeExp.get(i));
     }
 
-    cout << "Sigprod width = " << sigProd.bitLength() << endl;
+    //cout << "Sigprod width = " << sigProd.bitLength() << endl;
 
     for (int i = 0; i < 52; i++) {
       result.set(i, sigProd.get(i + 52));
@@ -464,6 +468,36 @@ namespace FuncGen {
 
       product = double_float_multiply(doubleToBV(a), doubleToBV(b));
 
+      // cout << "ProductBV = " << doubleToBV(bvToDouble(product)) << endl;
+      // cout << "CorrectBV = " << doubleToBV(correct) << endl;
+      
+      // cout << "ProductBV = " << bvToDouble(product) << endl;
+      // cout << "CorrectBV = " << correct << endl;
+      
+      REQUIRE(bvToDouble(product) == correct);
+    }
+
+    cout << "Random testing of denormals" << endl;
+    for (int i = 0; i < 1000; i++) {
+      BitVector aExp(11, 0);
+      BitVector bExp(11, 0);
+
+      BitVector aMant(52, iRand(-1000000, 1000000));
+      BitVector bMant(52, iRand(-1000000, 1000000));
+
+      BitVector aSign(1, iRand(-2, 2));
+      BitVector bSign(1, iRand(-2, 2));
+
+      BitVector a(64, 0);
+      a.set(63, aSign.get(0));
+
+      BitVector b(64, 0);
+      b.set(63, bSign.get(0));
+
+      double correct = (bvToDouble(a)*bvToDouble(b));
+
+      product = double_float_multiply(a, b);
+
       cout << "ProductBV = " << doubleToBV(bvToDouble(product)) << endl;
       cout << "CorrectBV = " << doubleToBV(correct) << endl;
       
@@ -472,6 +506,7 @@ namespace FuncGen {
       
       REQUIRE(bvToDouble(product) == correct);
     }
+
   }
 
   // TEST_CASE("8 bit newton raphson experiment") {
