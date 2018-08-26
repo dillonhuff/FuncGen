@@ -324,6 +324,11 @@ namespace FuncGen {
     return res;
   }
 
+  BitVector get_double_exponent(const BitVector& a) {
+    assert(a.bitLength() == 64);
+    return slice(a, 52, 63);
+  }
+
   BitVector get_double_sign_bit(const BitVector& a) {
     assert(a.bitLength() == 64);
 
@@ -332,12 +337,22 @@ namespace FuncGen {
 
   BitVector double_float_multiply(const BitVector& a, const BitVector& b) {
     BitVector sgnA = get_double_sign_bit(a);
-    // BitVector expA = getDoubleExponent(a);
-    // BitVector sigA = getDoubleMantissa(a);
+    BitVector expA = get_double_exponent(a);
+
+    assert(expA.bitLength() == 11);
 
     BitVector sgnB = get_double_sign_bit(b);
-    // BitVector expB = getDoubleExponent(b);
-    // BitVector sigB = getDoubleMantissa(b);
+    BitVector expB = get_double_exponent(b);
+
+    assert(expB.bitLength() == 11);
+
+    const int DOUBLE_BIAS = 1023;
+
+    BitVector tentativeExp =
+      sub_general_width_bv(add_general_width_bv(expA, expB),
+                           BitVector(11, DOUBLE_BIAS));
+
+    cout << "tentativeExp = " << tentativeExp << ", int = " << tentativeExp.to_type<int>() << endl;
 
     BitVector sgnR(1, 0);
     if (sgnA == sgnB) {
@@ -348,6 +363,9 @@ namespace FuncGen {
 
     BitVector result(64, 0);
     result.set(63, sgnR.get(0));
+    for (int i = 0; i < tentativeExp.bitLength(); i++) {
+      result.set(52 + i, tentativeExp.get(i));
+    }
 
     return result;
   }
