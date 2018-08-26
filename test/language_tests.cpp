@@ -329,6 +329,11 @@ namespace FuncGen {
     return slice(a, 52, 63);
   }
 
+  BitVector get_double_mantissa(const BitVector& a) {
+    assert(a.bitLength() == 64);
+    return slice(a, 0, 52);
+  }
+  
   BitVector get_double_sign_bit(const BitVector& a) {
     assert(a.bitLength() == 64);
 
@@ -338,13 +343,17 @@ namespace FuncGen {
   BitVector double_float_multiply(const BitVector& a, const BitVector& b) {
     BitVector sgnA = get_double_sign_bit(a);
     BitVector expA = get_double_exponent(a);
+    BitVector sigA = get_double_mantissa(a);
 
     assert(expA.bitLength() == 11);
+    assert(sigA.bitLength() == 52);
 
     BitVector sgnB = get_double_sign_bit(b);
     BitVector expB = get_double_exponent(b);
+    BitVector sigB = get_double_mantissa(b);
 
     assert(expB.bitLength() == 11);
+    assert(sigB.bitLength() == 52);
 
     const int DOUBLE_BIAS = 1023;
 
@@ -353,6 +362,35 @@ namespace FuncGen {
                            BitVector(11, DOUBLE_BIAS));
 
     cout << "tentativeExp = " << tentativeExp << ", int = " << tentativeExp.to_type<int>() << endl;
+
+    // Extend precision and set implicit bit
+    BitVector sigAExt = zero_extend(2*(sigA.bitLength() + 1), sigA);
+    sigAExt.set(sigA.bitLength(), 1);
+    BitVector sigBExt = zero_extend(2*(sigB.bitLength() + 1), sigB);
+    sigBExt.set(sigB.bitLength(), 1);
+
+    BitVector sigProd = mul_general_width_bv(sigAExt, sigBExt);
+    cout << "sigProd = " << sigProd << endl;
+
+    if (sigProd.get(sigProd.bitLength() - 1).binary_value() == 1) {
+      sigProd = lshr(sigProd, BitVector(32, 1));
+      tentativeExp = add_general_width_bv(tentativeExp, BitVector(11, 1));
+    }
+
+    auto M0 = sigProd.get(51).binary_value();
+    auto R = sigProd.get(50).binary_value();
+    auto S = orr(slice(sigProd, 0, 50)).get(0).binary_value();
+
+    if (R*(M0 + S) != 0) {
+      BitVector roundOne(52*2, 0);
+      roundOne.set(51, 1);
+
+      assert(roundOne.bitLength() == sigProd.bitLength());
+
+      sigProd = add_general_width_bv(sigProd, roundOne);
+    }
+
+    cout << "Normalized sigProd = " << sigProd << endl;
 
     BitVector sgnR(1, 0);
     if (sgnA == sgnB) {
@@ -367,6 +405,10 @@ namespace FuncGen {
       result.set(52 + i, tentativeExp.get(i));
     }
 
+    for (int i = 0; i < (sigProd.bitLength() / 2) - 1; i++) {
+      result.set(i, sigProd.get(i + 52));
+    }
+    
     return result;
   }
 
@@ -390,8 +432,11 @@ namespace FuncGen {
     cout << "Two as double = " << two << endl;
 
     BitVector product = double_float_multiply(one, two);
-
     REQUIRE(bvToDouble(product) == (1.0*2.0));
+
+    product = double_float_multiply(doubleToBV(123.7), doubleToBV(13.4));
+    REQUIRE(bvToDouble(product) == (123.7*13.4));
+
   }
 
   // TEST_CASE("8 bit newton raphson experiment") {

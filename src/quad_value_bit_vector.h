@@ -1069,7 +1069,6 @@ namespace bsim {
     }
     return res;
   }
-  
 
   static inline
   quad_value_bit_vector
