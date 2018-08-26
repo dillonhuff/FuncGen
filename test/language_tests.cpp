@@ -7,6 +7,11 @@ using namespace std;
 
 namespace FuncGen {
 
+  double fRand(double fMin, double fMax) {
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+  }  
+
   class FixedPoint {
   public:
     BitVector bits;
@@ -381,10 +386,10 @@ namespace FuncGen {
     auto R = sigProd.get(51).binary_value();
     auto S = orr(slice(sigProd, 0, 51)).get(0).binary_value();
 
-    if (R*((M0 + S) % 2) != 0) {
+    if (R*((M0 + S)) != 0) {
       BitVector roundOne(53*2, 0);
       cout << "Rounding" << endl;
-      roundOne.set(51, 1);
+      roundOne.set(52, 1);
 
       assert(roundOne.bitLength() == sigProd.bitLength());
 
@@ -410,7 +415,6 @@ namespace FuncGen {
 
     cout << "Sigprod width = " << sigProd.bitLength() << endl;
 
-    //for (int i = 0; i < (sigProd.bitLength() / 2) - 1; i++) {
     for (int i = 0; i < 52; i++) {
       result.set(i, sigProd.get(i + 52));
     }
@@ -452,6 +456,22 @@ namespace FuncGen {
 
     REQUIRE(bvToDouble(product) == correct);
 
+    cout << "Random testing" << endl;
+    for (int i = 0; i < 1000; i++) {
+      double a = fRand(-100, 100);
+      double b = fRand(-100, 100);
+      double correct = (a*b);
+
+      product = double_float_multiply(doubleToBV(a), doubleToBV(b));
+
+      cout << "ProductBV = " << doubleToBV(bvToDouble(product)) << endl;
+      cout << "CorrectBV = " << doubleToBV(correct) << endl;
+      
+      cout << "ProductBV = " << bvToDouble(product) << endl;
+      cout << "CorrectBV = " << correct << endl;
+      
+      REQUIRE(bvToDouble(product) == correct);
+    }
   }
 
   // TEST_CASE("8 bit newton raphson experiment") {
