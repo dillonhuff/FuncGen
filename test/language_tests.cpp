@@ -92,7 +92,33 @@ namespace FuncGen {
     assert(false);
   }
 
-  FixedPoint subtract(const FixedPoint& a, const FixedPoint& b) {
+  FixedPoint renormalizeExponent(const int newExp, const FixedPoint& bE) {
+    int diff = newExp - bE.exponent;
+
+    if (diff == 0) {
+      return bE;
+    }
+
+    if (diff > 0) {
+      return {shl(bE.bits, BitVector(32, diff)), newExp};
+    }
+
+    return {lshr(bE.bits, BitVector(32, diff)), newExp};
+
+  }
+
+  FixedPoint subtract(const FixedPoint& aE, const FixedPoint& bE) {
+    auto a = leftExtend(aE);
+    auto b = renormalizeExponent(a.exponent, bE);
+
+    cout << "aE = " << aE << endl;
+    cout << "bE = " << bE << endl;
+    
+    cout << "a  = " << a << endl;
+    cout << "b  = " << b << endl;
+    //auto b = leftExtend(bE);
+
+    
     assert(false);
   }
   
@@ -275,73 +301,121 @@ namespace FuncGen {
 
   }
 
-  TEST_CASE("8 bit newton raphson experiment") {
+  BitVector doubleToBV(const double d) {
+    BitVector res(64, 0);
 
-    FixedPoint f10{BitVector(8, 10), 0};
-    FixedPoint f3{BitVector(8, 3), 0};
+    unsigned long long* dptr = (unsigned long long*) (&d);
 
-    FixedPoint f48{BitVector(8, 48), 0};
-    FixedPoint f17{BitVector(8, 17), 0};
+    for (int i = 0; i < 64; i++) {
+      res.set(i, quad_value((*dptr >> i) & 0b1));
+    }
 
-    auto quot = divide(f48, f17);
-    cout << "48 / 17 = " << divide(f48, f17) << endl;
-    cout << "quot*17 = " << fixedPointToDouble(quot)*17 << endl;
-
-    FixedPoint leq = rightTruncate(quot.bitLength() / 2, leftExtend(quot));
-    cout << "left extended quotient = " << leq << endl;
-    
-    assert(false);
+    return res;
   }
 
-  TEST_CASE("16 bit newton-raphson division") {
-    int width = 16;
-    Context c;
-    Function* f = c.newFunction("newton_raphson_div_16",
-                                {{"N", c.arrayType(width)},
-                                    {"D", c.arrayType(width)}},
-                                {{"quotient", c.arrayType(width)}});
+  double bvToDouble(const BitVector& b) {
+    assert(b.bitLength() == 64);
 
-    int numIterations = ceil(log2((width + 1) / log2(17)));
-    cout << "Number of iterations = " << numIterations << endl;
+    double res = 0;
+    for (int i = 0; i < 64; i++) {
+      *((unsigned long long*) (&res)) |= (((unsigned long long) b.get(i).binary_value()) << i);
+    }
 
-    auto c1 = f->unsignedDivide(f->constant(width, 48),
-                                f->constant(width, 17));
-    auto c2 = f->unsignedDivide(f->constant(width, 32),
-                                f->constant(width, 17));
-
-    BitVector bv(width, 32);
-    BitVector bv0(width, 17);
-
-    cout << "32 = " << bv << endl;
-    cout << "17 = " << bv0 << endl;
-    auto quot = unsigned_divide(shl(bv, BitVector(32, 10)), bv0);
-    double approx = approximateFixedPoint(quot, 10);
-    cout << "Quotient c2 = " << quot << ", fixed point = " << approx << ", bv0*approx = " << bv0.to_type<int>()*approx << endl;
-
-    assert(false);
-    
-    auto x = f->zeroExtend(2*width,
-                           f->subtract(c1, f->multiply(c2, f->getValue("D"))));
-
-    auto dext = f->zeroExtend(2*width, f->getValue("D"));
-
-    f->repeat(numIterations,
-              f->assignStmt(x,
-                            f->plusExpr(x,
-                                        f->timesExpr(x,
-                                                     f->subExpr(f->constant(2*width, 1),
-                                                                f->timesExpr(dext,
-                                                                             x))))));
-
-    
-    auto res = f->multiply(f->getValue("N"), x);
-    f->assign(f->getValue("quotient"), res);
-
-    Simulator sim(*f);
-    sim.setInput("N", BitVector(width, 10));
-    sim.setInput("D", BitVector(width, 4));
-    sim.evaluate();
-
-    REQUIRE(sim.getOutput("quotient") == BitVector(width, 10 / 4));
+    return res;
   }
+
+  TEST_CASE("Floating point multiply") {
+    int width = 64;
+    int mantissaWidth = 52;
+    int exponentWidth = 11;
+
+    REQUIRE((1 + mantissaWidth + exponentWidth) == width);
+
+    BitVector one = doubleToBV(1);
+    BitVector two = doubleToBV(2);
+
+    cout << "One as double = " << one << endl;
+    cout << "Two as double = " << two << endl;
+
+    REQUIRE(bvToDouble(doubleToBV(123.5)) == 123.5);
+  }
+
+  // TEST_CASE("8 bit newton raphson experiment") {
+
+  //   FixedPoint f10{BitVector(8, 10), 0};
+  //   FixedPoint f3{BitVector(8, 3), 0};
+
+  //   FixedPoint f48{BitVector(8, 48), 0};
+  //   FixedPoint f17{BitVector(8, 17), 0};
+
+  //   auto quot = divide(f48, f17);
+  //   cout << "48 / 17 = " << divide(f48, f17) << endl;
+  //   cout << "quot*17 = " << fixedPointToDouble(quot)*17 << endl;
+
+  //   FixedPoint c0 = rightTruncate(quot.bitLength() / 2, leftExtend(quot));
+  //   cout << "left extended quotient = " << c0 << endl;
+
+  //   FixedPoint f32{BitVector(8, 32), 0};
+  //   auto c1 = rightTruncate(quot.bitLength() / 2, leftExtend(divide(f32, f17)));
+  //   cout << "left extended quotient = " << c1 << endl;
+
+  //   auto D = f3;
+  //   auto X = subtract(c0, rightTruncate(quot.bitLength(), leftExtend(multiply(c1, D))));
+
+  //   cout << "X = " << X << endl;
+    
+  //   assert(false);
+  // }
+
+  // TEST_CASE("16 bit newton-raphson division") {
+  //   int width = 16;
+  //   Context c;
+  //   Function* f = c.newFunction("newton_raphson_div_16",
+  //                               {{"N", c.arrayType(width)},
+  //                                   {"D", c.arrayType(width)}},
+  //                               {{"quotient", c.arrayType(width)}});
+
+  //   int numIterations = ceil(log2((width + 1) / log2(17)));
+  //   cout << "Number of iterations = " << numIterations << endl;
+
+  //   auto c1 = f->unsignedDivide(f->constant(width, 48),
+  //                               f->constant(width, 17));
+  //   auto c2 = f->unsignedDivide(f->constant(width, 32),
+  //                               f->constant(width, 17));
+
+  //   BitVector bv(width, 32);
+  //   BitVector bv0(width, 17);
+
+  //   cout << "32 = " << bv << endl;
+  //   cout << "17 = " << bv0 << endl;
+  //   auto quot = unsigned_divide(shl(bv, BitVector(32, 10)), bv0);
+  //   double approx = approximateFixedPoint(quot, 10);
+  //   cout << "Quotient c2 = " << quot << ", fixed point = " << approx << ", bv0*approx = " << bv0.to_type<int>()*approx << endl;
+
+  //   assert(false);
+    
+  //   auto x = f->zeroExtend(2*width,
+  //                          f->subtract(c1, f->multiply(c2, f->getValue("D"))));
+
+  //   auto dext = f->zeroExtend(2*width, f->getValue("D"));
+
+  //   f->repeat(numIterations,
+  //             f->assignStmt(x,
+  //                           f->plusExpr(x,
+  //                                       f->timesExpr(x,
+  //                                                    f->subExpr(f->constant(2*width, 1),
+  //                                                               f->timesExpr(dext,
+  //                                                                            x))))));
+
+    
+  //   auto res = f->multiply(f->getValue("N"), x);
+  //   f->assign(f->getValue("quotient"), res);
+
+  //   Simulator sim(*f);
+  //   sim.setInput("N", BitVector(width, 10));
+  //   sim.setInput("D", BitVector(width, 4));
+  //   sim.evaluate();
+
+  //   REQUIRE(sim.getOutput("quotient") == BitVector(width, 10 / 4));
+  // }
 }
