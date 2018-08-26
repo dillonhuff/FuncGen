@@ -383,6 +383,7 @@ namespace FuncGen {
 
     if (R*(M0 + S) != 0) {
       BitVector roundOne(52*2, 0);
+      cout << "Rounding" << endl;
       roundOne.set(51, 1);
 
       assert(roundOne.bitLength() == sigProd.bitLength());
@@ -435,7 +436,12 @@ namespace FuncGen {
     REQUIRE(bvToDouble(product) == (1.0*2.0));
 
     product = double_float_multiply(doubleToBV(123.7), doubleToBV(13.4));
-    REQUIRE(bvToDouble(product) == (123.7*13.4));
+
+    double correct = (123.7*13.4);
+    cout.precision(17);
+    cout << "Product = " << bvToDouble(product) << endl;
+    cout << "Correct = " << correct << endl;
+    REQUIRE(bvToDouble(product) == correct);
 
   }
 
