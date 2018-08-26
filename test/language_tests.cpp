@@ -465,9 +465,16 @@ namespace FuncGen {
     cout << "Larger sig = " << largerSig << endl;
     cout << "Larger op  = " << largerOp << endl;
 
-    BitVector tempRes =
-      add_general_width_bv(zero_extend(largerOp.bitLength() + 1, largerOp),
-                           zero_extend(smallerOp.bitLength() + 1, smallerOp));
+    BitVector tempRes(largerOp.bitLength(), 0);
+    if (sgnA == sgnB) {
+      tempRes =
+        add_general_width_bv(zero_extend(largerOp.bitLength() + 1, largerOp),
+                             zero_extend(smallerOp.bitLength() + 1, smallerOp));
+    } else {
+      tempRes =
+        sub_general_width_bv(zero_extend(largerOp.bitLength() + 1, largerOp),
+                             zero_extend(smallerOp.bitLength() + 1, smallerOp));
+    }
 
     cout << "temp res = " << tempRes << endl;
 
