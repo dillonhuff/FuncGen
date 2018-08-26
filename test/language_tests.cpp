@@ -361,14 +361,16 @@ namespace FuncGen {
     return n;
   }
 
+  const int DOUBLE_WIDTH = 64;
+  const int DOUBLE_EXP_WIDTH = 11;
+  const int DOUBLE_MANTISSA_WIDTH = 52;
+  const int DOUBLE_BIAS = 1023;
+  
   BitVector normalizeDoubleSubnormal(const BitVector& a) {
     BitVector sgnA = get_double_sign_bit(a);
     BitVector expA = get_double_exponent(a);
     BitVector sigA = get_double_mantissa(a);
 
-    const int DOUBLE_WIDTH = 64;
-    const int DOUBLE_EXP_WIDTH = 11;
-    const int DOUBLE_MANTISSA_WIDTH = 52;
     BitVector toShift =
       sub_general_width_bv(BitVector(DOUBLE_EXP_WIDTH, num_leading_zeros(sigA)), BitVector(DOUBLE_EXP_WIDTH, 11));
 
@@ -394,8 +396,6 @@ namespace FuncGen {
     //assert(false);
   }
 
-  const int DOUBLE_BIAS = 1023;
-  
   BitVector double_float_add(const BitVector& a, const BitVector& b) {
     BitVector sgnA = get_double_sign_bit(a);
     auto expA = get_double_exponent(a);
@@ -425,9 +425,9 @@ namespace FuncGen {
       smallerExp = expA;
 
       larger = b;
-      largerSig = b;
+      largerSig = sigB;
       smaller = a;
-      smallerSig = a;
+      smallerSig = sigA;
     }
 
     cout << "Smaller = " << smaller << endl;
@@ -462,9 +462,57 @@ namespace FuncGen {
     largerOp.set(largerOp.bitLength() - 1, 1);
 
 
-    cout << "Larger op  = " << largerOp << endl;    
+    cout << "Larger sig = " << largerSig << endl;
+    cout << "Larger op  = " << largerOp << endl;
 
-    return a;
+    BitVector tempRes =
+      add_general_width_bv(zero_extend(largerOp.bitLength() + 1, largerOp),
+                           zero_extend(smallerOp.bitLength() + 1, smallerOp));
+
+    cout << "temp res = " << tempRes << endl;
+
+    // Normalize
+    if (tempRes.get(tempRes.bitLength() - 1) == 1) {
+      tempRes = lshr(tempRes, BitVector(32, 1));
+      tentativeExp = add_general_width_bv(tentativeExp, BitVector(tentativeExp.bitLength(), 1));
+    }
+
+    auto M0 = tempRes.get(3).binary_value();
+    auto R = tempRes.get(2).binary_value();
+    auto S = orr(slice(tempRes, 0, 2)).get(0).binary_value();
+
+    if (R*(M0 + S) != 0) {
+      cout << "Rounding" << endl;
+      tempRes = add_general_width_bv(tempRes,
+                                     shl(BitVector(tempRes.bitLength(), 1),
+                                         BitVector(32, 2)));
+    }
+
+    // Renormalize
+    if (tempRes.get(tempRes.bitLength() - 1) == 1) {
+      tempRes = lshr(tempRes, BitVector(32, 1));
+      tentativeExp = add_general_width_bv(tentativeExp, BitVector(tentativeExp.bitLength(), 1));
+    }
+
+    BitVector mantRes = slice(tempRes, 3, DOUBLE_MANTISSA_WIDTH + 3);
+
+    assert(mantRes.bitLength() == DOUBLE_MANTISSA_WIDTH);
+
+    cout << "mantRes = " << mantRes << endl;
+    
+    BitVector result(DOUBLE_WIDTH, 0);
+    if (sgnA == sgnB) {
+      result.set(DOUBLE_WIDTH - 1, sgnA.get(0));
+    }
+    for (int i = 0; i < DOUBLE_MANTISSA_WIDTH; i++) {
+      result.set(i, mantRes.get(i));
+    }
+
+    for (int i = DOUBLE_MANTISSA_WIDTH; i < DOUBLE_MANTISSA_WIDTH + DOUBLE_EXP_WIDTH; i++) {
+      result.set(i, tentativeExp.get(i - DOUBLE_MANTISSA_WIDTH));
+    }
+    
+    return result;
   }
 
   BitVector double_float_multiply(const BitVector& aE, const BitVector& bE) {
@@ -583,7 +631,7 @@ namespace FuncGen {
 
     product = double_float_add(doubleToBV(123.7), doubleToBV(13.4));
 
-    double correct = (123.7*13.4);
+    double correct = (123.7 + 13.4);
     cout.precision(17);
     cout << "Sum       = " << bvToDouble(product) << endl;
     cout << "Correct   = " << correct << endl;
@@ -599,15 +647,18 @@ namespace FuncGen {
       double b = fRand(-100, 100);
       double correct = (a + b);
 
-      product = double_float_add(doubleToBV(a), doubleToBV(b));
+      cout << "a = " << a << endl;
+      cout << "b = " << b << endl;
+      
+      BitVector sum = double_float_add(doubleToBV(a), doubleToBV(b));
 
-      // cout << "ProductBV = " << doubleToBV(bvToDouble(product)) << endl;
-      // cout << "CorrectBV = " << doubleToBV(correct) << endl;
+      cout << "SumBV     = " << doubleToBV(bvToDouble(sum)) << endl;
+      cout << "CorrectBV = " << doubleToBV(correct) << endl;
       
-      // cout << "ProductBV = " << bvToDouble(product) << endl;
-      // cout << "CorrectBV = " << correct << endl;
+      cout << "SumBV     = " << bvToDouble(sum) << endl;
+      cout << "CorrectBV = " << correct << endl;
       
-      REQUIRE(bvToDouble(product) == correct);
+      REQUIRE(bvToDouble(sum) == correct);
     }
   }
 
