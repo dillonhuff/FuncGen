@@ -377,12 +377,12 @@ namespace FuncGen {
       tentativeExp = add_general_width_bv(tentativeExp, BitVector(11, 1));
     }
 
-    auto M0 = sigProd.get(51).binary_value();
-    auto R = sigProd.get(50).binary_value();
-    auto S = orr(slice(sigProd, 0, 50)).get(0).binary_value();
+    auto M0 = sigProd.get(52).binary_value();
+    auto R = sigProd.get(51).binary_value();
+    auto S = orr(slice(sigProd, 0, 51)).get(0).binary_value();
 
     if (R*(M0 + S) != 0) {
-      BitVector roundOne(52*2, 0);
+      BitVector roundOne(53*2, 0);
       cout << "Rounding" << endl;
       roundOne.set(51, 1);
 
