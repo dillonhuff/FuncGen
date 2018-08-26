@@ -393,6 +393,8 @@ namespace FuncGen {
 
     cout << "Normalized sigProd = " << sigProd << endl;
 
+    // TODO: Add re-normalization!!!!
+
     BitVector sgnR(1, 0);
     if (sgnA == sgnB) {
       sgnR.set(0, 0);
@@ -406,7 +408,10 @@ namespace FuncGen {
       result.set(52 + i, tentativeExp.get(i));
     }
 
-    for (int i = 0; i < (sigProd.bitLength() / 2) - 1; i++) {
+    cout << "Sigprod width = " << sigProd.bitLength() << endl;
+
+    //for (int i = 0; i < (sigProd.bitLength() / 2) - 1; i++) {
+    for (int i = 0; i < 52; i++) {
       result.set(i, sigProd.get(i + 52));
     }
     
@@ -439,8 +444,12 @@ namespace FuncGen {
 
     double correct = (123.7*13.4);
     cout.precision(17);
-    cout << "Product = " << bvToDouble(product) << endl;
-    cout << "Correct = " << correct << endl;
+    cout << "Product   = " << bvToDouble(product) << endl;
+    cout << "Correct   = " << correct << endl;
+
+    cout << "ProductBV = " << doubleToBV(bvToDouble(product)) << endl;
+    cout << "CorrectBV = " << doubleToBV(correct) << endl;
+
     REQUIRE(bvToDouble(product) == correct);
 
   }
