@@ -417,12 +417,18 @@ namespace FuncGen {
     BitVector largerSig = sigA;
     BitVector smallerSig = sigB;
 
+    BitVector largerSgn = sgnA;
+    BitVector smallerSgn = sgnB;
+    
     BitVector larger = a;
     BitVector smaller = b;
 
     if (expB > expA) {
       tentativeExp = expB;
       smallerExp = expA;
+
+      largerSgn = sgnB;
+      smallerSgn = sgnA;
 
       larger = b;
       largerSig = sigB;
@@ -510,6 +516,8 @@ namespace FuncGen {
     BitVector result(DOUBLE_WIDTH, 0);
     if (sgnA == sgnB) {
       result.set(DOUBLE_WIDTH - 1, sgnA.get(0));
+    } else {
+      result.set(DOUBLE_WIDTH - 1, largerSgn.get(0));
     }
     for (int i = 0; i < DOUBLE_MANTISSA_WIDTH; i++) {
       result.set(i, mantRes.get(i));
