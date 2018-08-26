@@ -324,6 +324,34 @@ namespace FuncGen {
     return res;
   }
 
+  BitVector get_double_sign_bit(const BitVector& a) {
+    assert(a.bitLength() == 64);
+
+    return BitVector(1, a.get(63).binary_value());
+  }
+
+  BitVector double_float_multiply(const BitVector& a, const BitVector& b) {
+    BitVector sgnA = get_double_sign_bit(a);
+    // BitVector expA = getDoubleExponent(a);
+    // BitVector sigA = getDoubleMantissa(a);
+
+    BitVector sgnB = get_double_sign_bit(b);
+    // BitVector expB = getDoubleExponent(b);
+    // BitVector sigB = getDoubleMantissa(b);
+
+    BitVector sgnR(1, 0);
+    if (sgnA == sgnB) {
+      sgnR.set(0, 0);
+    } else {
+      sgnR.set(0, 1);
+    }
+
+    BitVector result(64, 0);
+    result.set(63, sgnR.get(0));
+
+    return result;
+  }
+
   TEST_CASE("Floating point multiply") {
     int width = 64;
     int mantissaWidth = 52;
@@ -331,13 +359,21 @@ namespace FuncGen {
 
     REQUIRE((1 + mantissaWidth + exponentWidth) == width);
 
+    REQUIRE(bvToDouble(doubleToBV(123.5)) == 123.5);
+
+    REQUIRE(bvToDouble(doubleToBV(1)) == 1);
+
+    REQUIRE(bvToDouble(doubleToBV(39201.455)) == 39201.455);
+
     BitVector one = doubleToBV(1);
     BitVector two = doubleToBV(2);
 
     cout << "One as double = " << one << endl;
     cout << "Two as double = " << two << endl;
 
-    REQUIRE(bvToDouble(doubleToBV(123.5)) == 123.5);
+    BitVector product = double_float_multiply(one, two);
+
+    REQUIRE(bvToDouble(product) == (1.0*2.0));
   }
 
   // TEST_CASE("8 bit newton raphson experiment") {
