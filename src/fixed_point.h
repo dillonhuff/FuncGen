@@ -12,6 +12,15 @@ namespace FuncGen {
     BitVector bits;
     int exponent;
 
+    FixedPoint(const BitVector& bits_, const int exp_) :
+      sign(BitVector(1, 0)), bits(bits_), exponent(exp_) {}
+    
+    FixedPoint(const char sign_, const BitVector& bits_, const int exp_) :
+      sign(BitVector(1, sign_)), bits(bits_), exponent(exp_) {}
+
+    FixedPoint(const BitVector sign_, const BitVector& bits_, const int exp_) :
+      sign(sign_), bits(bits_), exponent(exp_) {}
+    
     int bitLength() const {
       return bits.bitLength();
     }

@@ -33,6 +33,15 @@ namespace FuncGen {
       }
     }
   }
+
+  TEST_CASE("NR test") {
+    int width = 16;
+    FixedPoint one = {BitVector(1, 0), BitVector(width, 1 << 15), -15};
+    FixedPoint X(0, BitVector(width, 1 << 14), -15);
+    cout << "one      = " << one << endl;
+    cout << "X        = " << X << endl;
+    
+  }
     
 
 }
