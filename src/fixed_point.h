@@ -26,6 +26,17 @@ namespace FuncGen {
     }
   };
 
+  FixedPoint flipSign(const FixedPoint& b) {
+    FixedPoint flipped = b;
+    flipped.sign = ~b.sign;
+    return flipped;
+  }
+
+  static inline
+  bool operator==(const FixedPoint& a, const FixedPoint& b) {
+    return (a.sign == b.sign) && (a.bits == b.bits) && (a.exponent == b.exponent);
+  }
+
   static inline
   std::ostream& operator<<(std::ostream& out, const FixedPoint& n) {
     for (int i = n.bitLength() - 1; i >= 0; i--) {
@@ -51,13 +62,72 @@ namespace FuncGen {
 
     cout << "Prod bits = " << prodBits << endl;
 
-    int sumExp = b.exponent + a.exponent;
-    return {signBit, slice(prodBits, 0, a.bitLength()), sumExp};
+    assert(a.exponent == b.exponent);
+    
+    int sumExp = b.exponent;// + a.exponent;
+    return {signBit, slice(lshr(prodBits, BitVector(32, -sumExp)), 0, a.bitLength()), sumExp};
   }
 
   static inline
   FixedPoint mul(const FixedPoint& a, const FixedPoint& b) {
     return multiply(a, b);
+  }
+
+  static inline
+  quad_value high_bit(const BitVector& b) {
+    return b.get(b.bitLength() - 1);
+  }
+
+  static inline
+  std::pair<BitVector, BitVector>
+  twos_complement_to_sign_magnitude(const BitVector twosComp) {
+    assert(twosComp.bitLength() > 1);
+
+    if (high_bit(twosComp).binary_value() == 0) {
+      return {BitVector(1, high_bit(twosComp).binary_value()),
+          slice(twosComp, 0, twosComp.bitLength() - 1)};
+    }
+    assert(false);
+    // BitVector sm(twosComp.size(), 0);
+    // for (
+  }
+
+  static inline
+  BitVector sign_magnitude_to_twos_complement(const BitVector& sign,
+                                              const BitVector& magnitude) {
+    assert(sign.bitLength() == 1);
+    
+    BitVector res(magnitude.bitLength() + 1, 0);
+    for (int i = 0; i < magnitude.bitLength(); i++) {
+      res.set(i, magnitude.get(i));
+    }
+
+    if (sign == BitVector(1, 0)) {
+      return res;
+    }
+
+    res.set(res.bitLength() - 1, 0);
+    res = ~res;
+    return add_general_width_bv(res, BitVector(res.bitLength(), 1));
+  }
+
+  static inline
+  FixedPoint add(const FixedPoint& a, const FixedPoint& b) {
+    assert(b.exponent == a.exponent);
+    assert(b.bits.bitLength() == a.bits.bitLength());
+
+    auto atc = sign_magnitude_to_twos_complement(a.sign, a.bits);
+    auto btc = sign_magnitude_to_twos_complement(b.sign, b.bits);
+    auto tcRes = add_general_width_bv(atc, btc);
+
+    cout << "tcres = " << tcRes << endl;
+    auto smRes = twos_complement_to_sign_magnitude(tcRes);
+    return {smRes.first, smRes.second, b.exponent};
+  }
+  
+  static inline
+  FixedPoint sub(const FixedPoint& a, const FixedPoint& b) {
+    return add(a, flipSign(b));
   }
   
   static inline
@@ -115,11 +185,6 @@ namespace FuncGen {
     // return {prodBits, b.exponent + a.exponent};
 
     return {unsigned_divide(shiftedNum.bits, denom.bits), shiftedNum.exponent - denom.exponent};
-  }
-
-  static inline
-  FixedPoint add(const FixedPoint& a, const FixedPoint& b) {
-    assert(false);
   }
 
   static inline

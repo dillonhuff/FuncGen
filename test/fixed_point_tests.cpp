@@ -38,9 +38,17 @@ namespace FuncGen {
     int width = 16;
     FixedPoint one = {BitVector(1, 0), BitVector(width, 1 << 15), -15};
     FixedPoint X(0, BitVector(width, 1 << 14), -15);
-    cout << "one      = " << one << endl;
-    cout << "X        = " << X << endl;
-    
+    cout << "one       = " << one << endl;
+    cout << "X         = " << X << endl;
+
+    auto res = mul(one, X);
+    cout << "one*X     = " << res << endl;
+
+    REQUIRE(res == X);
+
+    auto diff = sub(one, X);
+
+    REQUIRE(diff == X);
   }
     
 
