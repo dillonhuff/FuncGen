@@ -40,9 +40,10 @@ namespace FuncGen {
       signBit = BitVector(1, 1);
     }
 
+    cout << "Prod bits = " << prodBits << endl;
+
     int sumExp = b.exponent + a.exponent;
-    sumExp -= (a.bitLength() + 1);
-    return {signBit, slice(prodBits, a.bitLength(), 2*a.bitLength()), sumExp};
+    return {signBit, slice(prodBits, 0, a.bitLength()), sumExp};
   }
 
   static inline
