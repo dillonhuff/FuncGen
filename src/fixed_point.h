@@ -26,6 +26,7 @@ namespace FuncGen {
     }
   };
 
+  static inline
   FixedPoint flipSign(const FixedPoint& b) {
     FixedPoint flipped = b;
     flipped.sign = ~b.sign;
@@ -39,6 +40,10 @@ namespace FuncGen {
 
   static inline
   std::ostream& operator<<(std::ostream& out, const FixedPoint& n) {
+    if (n.sign == BitVector(1, 1)) {
+      out << "-";
+    }
+
     for (int i = n.bitLength() - 1; i >= 0; i--) {
       out << n.bits.get(i);
       if (i == -n.exponent) {
@@ -87,7 +92,16 @@ namespace FuncGen {
       return {BitVector(1, high_bit(twosComp).binary_value()),
           slice(twosComp, 0, twosComp.bitLength() - 1)};
     }
-    assert(false);
+
+    BitVector res = twosComp;
+    res.set(res.bitLength() - 1, 0);
+    res = ~res;
+    res = add_general_width_bv(res, BitVector(res.bitLength(), 1));
+
+    return {BitVector(1, high_bit(res).binary_value()),
+        slice(res, 0, res.bitLength() - 1)};
+    
+    //assert(false);
     // BitVector sm(twosComp.size(), 0);
     // for (
   }
@@ -236,6 +250,28 @@ namespace FuncGen {
   static inline
   double fixedPointToDouble(const FixedPoint& fp) {
     return pow(2, fp.sign.get(0).binary_value())*approximateFixedPoint(fp.bits, -fp.exponent);
+  }
+
+  static inline
+  int num_leading_zeros(const BitVector& a) {
+    int n = 0;
+    for (int i = a.bitLength() - 1; i >= 0; i--) {
+      if (a.get(i) == quad_value(0)) {
+        n++;
+      } else {
+        break;
+      }
+    }
+    return n;
+  }
+
+  static inline
+  BitVector normalize_left(const BitVector& a, const int digits_from_last) {
+    int i = num_leading_zeros(a) - digits_from_last;
+
+    assert(i >= 0);
+
+    return shl(a, BitVector(32, i));
   }
 
 }

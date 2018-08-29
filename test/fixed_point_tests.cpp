@@ -41,14 +41,43 @@ namespace FuncGen {
     cout << "one       = " << one << endl;
     cout << "X         = " << X << endl;
 
-    auto res = mul(one, X);
-    cout << "one*X     = " << res << endl;
+    SECTION("0.5 * 1") {
+      auto res = mul(one, X);
+      cout << "one*X     = " << res << endl;
 
-    REQUIRE(res == X);
+      REQUIRE(res == X);
+    }
 
-    auto diff = sub(one, X);
+    SECTION("1.0 - 0.5") {
+      auto diff = sub(one, X);
 
-    REQUIRE(diff == X);
+      REQUIRE(diff == X);
+    }
+
+    SECTION("0.5 - 1.0") {
+      auto diff = sub(X, one);
+
+      cout << "Diff = " << diff << endl;
+      REQUIRE(diff == flipSign(X));
+    }
+
+    // D is initially a bitvector
+    BitVector N(16, 20);
+    BitVector D(16, 5);
+
+    // Step one normalize D
+    FixedPoint D_(0, normalize_left(D, 1), -15);
+
+    cout << "D_     =" << D_ << endl;
+
+    cout << "1 / D_ = " << 1 / fixedPointToDouble(D_) << endl;
+    for (int i = 0; i < 10; i++) {
+      X = add(X, mul(X, sub(one, mul(D_, X))));
+
+      cout << "X_1 = " << X << ", " << fixedPointToDouble(X) << endl;
+    }
+
+    
   }
     
 

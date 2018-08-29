@@ -1,5 +1,6 @@
 #include "catch.hpp"
 
+#include "fixed_point.h"
 #include "language.h"
 #include "simulator.h"
 
@@ -216,18 +217,6 @@ namespace FuncGen {
     assert(a.bitLength() == 64);
 
     return BitVector(1, a.get(63).binary_value());
-  }
-
-  int num_leading_zeros(const BitVector& a) {
-    int n = 0;
-    for (int i = a.bitLength() - 1; i >= 0; i--) {
-      if (a.get(i) == quad_value(0)) {
-        n++;
-      } else {
-        break;
-      }
-    }
-    return n;
   }
 
   const int DOUBLE_WIDTH = 64;
