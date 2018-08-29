@@ -7,6 +7,21 @@ using namespace std;
 namespace FuncGen {
 
   static inline
+  quad_value_bit_vector
+  sign_extend(const int outWidth, const quad_value_bit_vector& in) {
+    quad_value_bit_vector res(outWidth, 0);
+    for (uint i = 0; i < (uint) in.bitLength(); i++) {
+      res.set(i, in.get(i));
+    }
+
+    for (int i = in.bitLength(); i < (int) outWidth; i++) {
+      res.set(i, in.get(in.bitLength() - 1));
+    }
+
+    return res;
+  }
+  
+  static inline
   int iRand(const int min, const int max) {
     return min + (rand() % static_cast<int>(max - min + 1));
   }

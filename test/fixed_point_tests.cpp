@@ -59,12 +59,20 @@ namespace FuncGen {
     }
 
     BitVector longProd =
-      mul_general_width_bv(zero_extend(2*width, N),
-                           zero_extend(2*width, sign_magnitude_to_twos_complement(X.sign, X.bits)));
+      mul_general_width_bv(sign_extend(2*width, N),
+                           sign_extend(2*width, sign_magnitude_to_twos_complement(X.sign, X.bits)));
 
     cout << "Long prod = " << longProd << endl;
 
-    return slice(lshr(longProd, BitVector(32, width + (width - shiftDistance) - 2)), 0, width);
+    auto tentativeRes = slice(ashr(longProd, BitVector(32, width + (width - shiftDistance) - 2)), 0, width);
+
+    // If N is negative
+    if (highBit(N) == quad_value(1)) {
+      return add_general_width_bv(tentativeRes, BitVector(width, 1));
+    }
+
+    return tentativeRes;
+
     // BitVector prod =
     //   mul_general_width_bv(N,
     //                        sign_magnitude_to_twos_complement(X.sign, X.bits));
@@ -121,6 +129,32 @@ namespace FuncGen {
       REQUIRE(prod == BitVector(16, 4));
     }
 
+    SECTION("Newton raphson -20 / 5") {
+      // D is initially a bitvector
+      BitVector N(16, -20);
+      BitVector D(16, 5);
+
+      cout << "N = " << N << endl;
+      cout << "D = " << D << endl;
+      auto prod = newton_raphson_divide(N, D);
+      cout << "Product         = " << prod << endl;
+
+      REQUIRE(prod == BitVector(16, -4));
+    }
+
+    SECTION("Newton raphson -118 / 7") {
+      // D is initially a bitvector
+      BitVector N(16, -118);
+      BitVector D(16, 7);
+
+      cout << "N = " << N << endl;
+      cout << "D = " << D << endl;
+      auto prod = newton_raphson_divide(N, D);
+      cout << "Product         = " << prod << endl;
+
+      REQUIRE(prod == BitVector(16, -118 / 7));
+    }
+    
     SECTION("Newton raphson 14 / 7") {
       // D is initially a bitvector
       BitVector N(16, 14);
@@ -147,8 +181,8 @@ namespace FuncGen {
     SECTION("Randomized testing") {
       for (int i = 0; i < 100; i++) {
         cout << "Rand i = " << i << endl;
-        int Ni = iRand(0, 1000);
-        int Di = iRand(0, 1000);
+        int Ni = iRand(3, 1000);
+        int Di = iRand(3, 1000);
 
         cout << "Ni = " << Ni << endl;
         cout << "Di = " << Di << endl;
