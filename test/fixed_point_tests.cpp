@@ -43,6 +43,8 @@ namespace FuncGen {
     BitVector N = NE;
     BitVector D = DE;
 
+    int decimalPlace = NE.bitLength() - 1;
+
     // If D is negative, negate and then
     if (high_bit(D) == 1) {
       D = twos_complement_negate(D);
@@ -55,46 +57,37 @@ namespace FuncGen {
     assert(N.bitLength() == D.bitLength());
     
     int width = N.bitLength();
-    FixedPoint one = {BitVector(1, 0), BitVector(width, 1 << 15), -15};
-    FixedPoint X(0, BitVector(width, 1 << 15), -15);
-
-    // cout << "one       = " << one << endl;
-    // cout << "X         = " << X << endl;
-    
-    // Step one normalize D
-    FixedPoint D_(0, normalize_left(D, 1), -15);
+    FixedPoint D_(0, normalize_left(D, 1), -decimalPlace);
     int shiftDistance = num_leading_zeros(D) - 1;
 
-    // If D is a power of 2
     BitVector tentativeRes(width);
     if (D_.bits == BitVector(width, 1 << (width - 2))) {
 
-      //cout << "D = " << D << " is a power of 2" << endl;
-
       int shiftDiv = width - shiftDistance - 2;
-
-      //cout << "Division is just shifting by " << shiftDiv << endl;
-
       tentativeRes = ashr(N, BitVector(width, shiftDiv));
+
     } else {
 
-      // cout << "shift distance " << shiftDistance << endl;
-      // cout << "D_     = " << D_ << endl;
-      // cout << "1 / D_ = " << 1 / fixedPointToDouble(D_) << endl;
+      FixedPoint one = {BitVector(1, 0), BitVector(width, 1 << decimalPlace), -decimalPlace};
+      FixedPoint X(0, BitVector(width, 1 << decimalPlace), -decimalPlace);
 
-      // Step two refine the approximation of 1 / D
+      BitVector one_tc = sign_magnitude_to_twos_complement(one.sign, one.bits);
+      BitVector X_tc = sign_magnitude_to_twos_complement(X.sign, X.bits);
+      BitVector D_tc = sign_magnitude_to_twos_complement(D_.sign, D_.bits);
+
       for (int i = 0; i < 5; i++) {
         X = add(X, mul(X, sub(one, mul(D_, X))));
-
-        //cout << "X_" << i << " = " << X << ", " << fixedPointToDouble(X) << endl;
+        //X_tc = add(X_tc, mul(X_tc, sub(one_tc, mul(D_tc, X_tc))));
       }
 
       BitVector longProd =
         mul_general_width_bv(sign_extend(2*width, N),
                              sign_extend(2*width, sign_magnitude_to_twos_complement(X.sign, X.bits)));
 
-      //cout << "Long prod = " << longProd << endl;
-
+      // BitVector longProd =
+      //   mul_general_width_bv(sign_extend(2*width, N),
+      //                        sign_extend(2*width, X_tc));
+      
       tentativeRes = slice(ashr(longProd, BitVector(32, width + (width - shiftDistance) - 2)), 0, width);
     }
 
@@ -138,7 +131,7 @@ namespace FuncGen {
       BitVector D(16, 3);
 
       auto prod = newton_raphson_divide(N, D);
-      cout << "Product         = " << prod << endl;
+      cout << "Quotient         = " << prod << endl;
 
       REQUIRE(prod == BitVector(16, 20 / 3));
     }
@@ -149,7 +142,7 @@ namespace FuncGen {
       BitVector D(16, 5);
 
       auto prod = newton_raphson_divide(N, D);
-      cout << "Product         = " << prod << endl;
+      cout << "Quotient         = " << prod << endl;
 
       REQUIRE(prod == BitVector(16, 4));
     }
@@ -160,7 +153,7 @@ namespace FuncGen {
       BitVector D(16, 2);
 
       auto prod = newton_raphson_divide(N, D);
-      cout << "Product         = " << prod << endl;
+      cout << "Quotient         = " << prod << endl;
 
       REQUIRE(prod == BitVector(16, 10));
     }
@@ -173,7 +166,7 @@ namespace FuncGen {
       cout << "N = " << N << endl;
       cout << "D = " << D << endl;
       auto prod = newton_raphson_divide(N, D);
-      cout << "Product         = " << prod << endl;
+      cout << "Quotient         = " << prod << endl;
 
       REQUIRE(prod == BitVector(16, -4));
     }
@@ -186,7 +179,7 @@ namespace FuncGen {
       cout << "N = " << N << endl;
       cout << "D = " << D << endl;
       auto prod = newton_raphson_divide(N, D);
-      cout << "Product         = " << prod << endl;
+      cout << "Quotient         = " << prod << endl;
 
       REQUIRE(prod == BitVector(16, -118 / 7));
     }
@@ -197,7 +190,7 @@ namespace FuncGen {
       BitVector D(16, 7);
 
       auto prod = newton_raphson_divide(N, D);
-      cout << "Product         = " << prod << endl;
+      cout << "Quotient         = " << prod << endl;
 
       REQUIRE(prod == BitVector(16, 14 / 7));
     }
@@ -208,7 +201,7 @@ namespace FuncGen {
       BitVector D(16, 6);
 
       auto prod = newton_raphson_divide(N, D);
-      cout << "Product         = " << prod << endl;
+      cout << "Quotient         = " << prod << endl;
 
       REQUIRE(prod == BitVector(16, 14 / 6));
     }
@@ -231,7 +224,7 @@ namespace FuncGen {
         cout << "D = " << D << endl;
 
         auto prod = newton_raphson_divide(N, D);
-        cout << "Product         = " << prod << endl;
+        cout << "Quotient         = " << prod << endl;
 
         REQUIRE(prod == BitVector(16, Ni / Di));
       }

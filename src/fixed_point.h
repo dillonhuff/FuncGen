@@ -100,6 +100,31 @@ namespace FuncGen {
   }
 
   static inline
+  BitVector mul(const BitVector& a, const BitVector& b) {
+    auto aBitsExt = zero_extend(2*a.bitLength(), a);
+    auto bBitsExt = zero_extend(2*b.bitLength(), b);
+    auto prodBits = mul_general_width_bv(aBitsExt, bBitsExt);
+
+    cout << "ProdBits = " << prodBits << endl;
+
+    auto res = slice(lshr(prodBits, BitVector(32, a.bitLength() - 1)), 0, a.bitLength());
+
+    assert(res.bitLength() == a.bitLength());
+
+    return res;
+  }
+
+  static inline
+  BitVector add(const BitVector& a, const BitVector& b) {
+    return add_general_width_bv(a, b);
+  }
+
+  static inline
+  BitVector sub(const BitVector& a, const BitVector& b) {
+    return sub_general_width_bv(a, b);
+  }
+  
+  static inline
   FixedPoint mul(const FixedPoint& a, const FixedPoint& b) {
     return multiply(a, b);
   }
