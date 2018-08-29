@@ -82,7 +82,7 @@ namespace FuncGen {
       cout << "1 / D_ = " << 1 / fixedPointToDouble(D_) << endl;
 
       // Step two refine the approximation of 1 / D
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 5; i++) {
         X = add(X, mul(X, sub(one, mul(D_, X))));
 
         cout << "X_" << i << " = " << X << ", " << fixedPointToDouble(X) << endl;
