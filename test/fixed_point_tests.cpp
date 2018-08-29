@@ -61,8 +61,9 @@ namespace FuncGen {
     int width = N.bitLength();
     FixedPoint one = {BitVector(1, 0), BitVector(width, 1 << 15), -15};
     FixedPoint X(0, BitVector(width, 1 << 15), -15);
-    cout << "one       = " << one << endl;
-    cout << "X         = " << X << endl;
+
+    // cout << "one       = " << one << endl;
+    // cout << "X         = " << X << endl;
     
     // Step one normalize D
     FixedPoint D_(0, normalize_left(D, 1), -15);
@@ -71,28 +72,32 @@ namespace FuncGen {
     // If D is a power of 2
     BitVector tentativeRes(width);
     if (D_.bits == BitVector(width, 1 << (width - 2))) {
-      cout << "D = " << D << " is a power of 2" << endl;
+
+      //cout << "D = " << D << " is a power of 2" << endl;
+
       int shiftDiv = width - shiftDistance - 2;
-      cout << "Division is just shifting by " << shiftDiv << endl;
+
+      //cout << "Division is just shifting by " << shiftDiv << endl;
+
       tentativeRes = ashr(N, BitVector(width, shiftDiv));
     } else {
-      cout << "shift distance " << shiftDistance << endl;
 
-      cout << "D_     = " << D_ << endl;
-      cout << "1 / D_ = " << 1 / fixedPointToDouble(D_) << endl;
+      // cout << "shift distance " << shiftDistance << endl;
+      // cout << "D_     = " << D_ << endl;
+      // cout << "1 / D_ = " << 1 / fixedPointToDouble(D_) << endl;
 
       // Step two refine the approximation of 1 / D
       for (int i = 0; i < 5; i++) {
         X = add(X, mul(X, sub(one, mul(D_, X))));
 
-        cout << "X_" << i << " = " << X << ", " << fixedPointToDouble(X) << endl;
+        //cout << "X_" << i << " = " << X << ", " << fixedPointToDouble(X) << endl;
       }
 
       BitVector longProd =
         mul_general_width_bv(sign_extend(2*width, N),
                              sign_extend(2*width, sign_magnitude_to_twos_complement(X.sign, X.bits)));
 
-      cout << "Long prod = " << longProd << endl;
+      //cout << "Long prod = " << longProd << endl;
 
       tentativeRes = slice(ashr(longProd, BitVector(32, width + (width - shiftDistance) - 2)), 0, width);
     }
