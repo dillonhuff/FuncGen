@@ -69,15 +69,29 @@ namespace FuncGen {
     FixedPoint D_(0, normalize_left(D, 1), -15);
 
     cout << "D_     =" << D_ << endl;
-
     cout << "1 / D_ = " << 1 / fixedPointToDouble(D_) << endl;
+
+    // Step two refine the approximation of 1 / D
     for (int i = 0; i < 10; i++) {
       X = add(X, mul(X, sub(one, mul(D_, X))));
 
-      cout << "X_1 = " << X << ", " << fixedPointToDouble(X) << endl;
+      cout << "X_" << i << " = " << X << ", " << fixedPointToDouble(X) << endl;
     }
 
+    // Multiply the result: N * (1/D)
+    // BitVector prod =
+    //   mul_general_width_bv(zero_extend(2*N.bitLength(), N),
+    //                        zero_extend(2*N.bitLength(),
+    //                                    sign_magnitude_to_twos_complement(X.sign, X.bits)));
+
+    BitVector prod =
+      mul_general_width_bv(N,
+                           sign_magnitude_to_twos_complement(X.sign, X.bits));
     
+    cout << "Product         = " << prod << endl;
+
+    REQUIRE(prod == BitVector(16, 4));
+    //cout << "Product shifted = " << lshr(prod, BitVector(32, 16)) << endl;
   }
     
 
