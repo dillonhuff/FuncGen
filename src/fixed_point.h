@@ -65,7 +65,7 @@ namespace FuncGen {
       signBit = BitVector(1, 1);
     }
 
-    cout << "Prod bits = " << prodBits << endl;
+    //cout << "Prod bits = " << prodBits << endl;
 
     assert(a.exponent == b.exponent);
     
@@ -134,7 +134,7 @@ namespace FuncGen {
     auto btc = sign_magnitude_to_twos_complement(b.sign, b.bits);
     auto tcRes = add_general_width_bv(atc, btc);
 
-    cout << "tcres = " << tcRes << endl;
+    //cout << "tcres = " << tcRes << endl;
     auto smRes = twos_complement_to_sign_magnitude(tcRes);
     return {smRes.first, smRes.second, b.exponent};
   }
@@ -176,9 +176,9 @@ namespace FuncGen {
     auto num = FixedPoint{zero_extend(numE.bitLength()*2, numE.bits), numE.exponent};
     auto denom = FixedPoint{zero_extend(denomE.bitLength()*2, denomE.bits), denomE.exponent};
 
-    cout << endl;
-    cout << "numerator   = " << num << endl;
-    cout << "denominator = " << denom << endl;
+    //cout << endl;
+    //cout << "numerator   = " << num << endl;
+    //cout << "denominator = " << denom << endl;
 
     FixedPoint shiftedNum = leftExtend(num);
     // int lastOnePos = num.bitLength() - 1;
