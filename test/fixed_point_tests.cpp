@@ -39,14 +39,15 @@ namespace FuncGen {
     
     int width = N.bitLength();
     FixedPoint one = {BitVector(1, 0), BitVector(width, 1 << 15), -15};
-    FixedPoint X(0, BitVector(width, 1 << 14), -15);
+    FixedPoint X(0, BitVector(width, 1 << 15), -15);
     cout << "one       = " << one << endl;
     cout << "X         = " << X << endl;
     
     // Step one normalize D
     FixedPoint D_(0, normalize_left(D, 1), -15);
+    //int shiftDistance = num_leading_zeros(D) - 1;
 
-    cout << "D_     =" << D_ << endl;
+    cout << "D_     = " << D_ << endl;
     cout << "1 / D_ = " << 1 / fixedPointToDouble(D_) << endl;
 
     // Step two refine the approximation of 1 / D
@@ -56,11 +57,18 @@ namespace FuncGen {
       cout << "X_" << i << " = " << X << ", " << fixedPointToDouble(X) << endl;
     }
 
-    BitVector prod =
-      mul_general_width_bv(N,
-                           sign_magnitude_to_twos_complement(X.sign, X.bits));
+    BitVector longProd =
+      mul_general_width_bv(zero_extend(2*width, N),
+                           zero_extend(2*width, sign_magnitude_to_twos_complement(X.sign, X.bits)));
 
-    return prod;
+    cout << "Long prod = " << longProd << endl;
+
+    return slice(lshr(longProd, BitVector(32, width + 2)), 0, width);
+    // BitVector prod =
+    //   mul_general_width_bv(N,
+    //                        sign_magnitude_to_twos_complement(X.sign, X.bits));
+
+    // return prod;
   }
 
   TEST_CASE("NR test") {
@@ -96,27 +104,33 @@ namespace FuncGen {
       BitVector D(16, 5);
 
       auto prod = newton_raphson_divide(N, D);
-      // // Step one normalize D
-      // FixedPoint D_(0, normalize_left(D, 1), -15);
-
-      // cout << "D_     =" << D_ << endl;
-      // cout << "1 / D_ = " << 1 / fixedPointToDouble(D_) << endl;
-
-      // // Step two refine the approximation of 1 / D
-      // for (int i = 0; i < 10; i++) {
-      //   X = add(X, mul(X, sub(one, mul(D_, X))));
-
-      //   cout << "X_" << i << " = " << X << ", " << fixedPointToDouble(X) << endl;
-      // }
-
-      // BitVector prod =
-      //   mul_general_width_bv(N,
-      //                        sign_magnitude_to_twos_complement(X.sign, X.bits));
-    
       cout << "Product         = " << prod << endl;
 
       REQUIRE(prod == BitVector(16, 4));
     }
+
+    SECTION("Newton raphson 14 / 7") {
+      // D is initially a bitvector
+      BitVector N(16, 14);
+      BitVector D(16, 7);
+
+      auto prod = newton_raphson_divide(N, D);
+      cout << "Product         = " << prod << endl;
+
+      REQUIRE(prod == BitVector(16, 14 / 7));
+    }
+    
+    SECTION("Newton raphson 14 / 6") {
+      // D is initially a bitvector
+      BitVector N(16, 14);
+      BitVector D(16, 6);
+
+      auto prod = newton_raphson_divide(N, D);
+      cout << "Product         = " << prod << endl;
+
+      REQUIRE(prod == BitVector(16, 14 / 6));
+    }
+
   }
     
 
