@@ -181,8 +181,8 @@ namespace FuncGen {
     SECTION("Randomized testing") {
       for (int i = 0; i < 100; i++) {
         cout << "Rand i = " << i << endl;
-        int Ni = iRand(3, 1000);
-        int Di = iRand(3, 1000);
+        int Ni = iRand(-100, 1000);
+        int Di = iRand(-100, 1000);
 
         cout << "Ni = " << Ni << endl;
         cout << "Di = " << Di << endl;
