@@ -44,15 +44,11 @@ namespace FuncGen {
     BitVector D = DE;
 
     // If D is negative, negate and then
-    bool dNegative = false;
     if (high_bit(D) == 1) {
-      dNegative = true;
       D = twos_complement_negate(D);
     }
 
-    bool nNegative = false;
     if (high_bit(N) == 1) {
-      nNegative = true;
       N = twos_complement_negate(N);
     }
     
@@ -102,7 +98,7 @@ namespace FuncGen {
       tentativeRes = slice(ashr(longProd, BitVector(32, width + (width - shiftDistance) - 2)), 0, width);
     }
 
-    if (dNegative != nNegative) {
+    if (highBit(DE) != highBit(NE)) {
       tentativeRes = twos_complement_negate(tentativeRes);
     }
 
