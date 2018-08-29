@@ -214,19 +214,6 @@ namespace FuncGen {
 
 
     SECTION("Randomized testing") {
-      // for (int i = 0; i < 1000; i++) {
-      //   cout << "Rand i = " << i << endl;
-      //   int Ni = iRand(-1000, 1000);
-      //   int Di = iRand(-100, 100);
-
-      //   cout << "Ni = " << Ni << endl;
-      //   cout << "Di = " << Di << endl;
-
-      //   cout << "Ni / Di  = " << Ni / Di << endl;
-      //   cout << "Ni / -Di = " << Ni / (-Di) << endl;
-
-      //   REQUIRE(-(Ni / Di) == (Ni / (-Di)));
-      // }
       
       for (int i = 0; i < 100; i++) {
         cout << "Rand i = " << i << endl;
