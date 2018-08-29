@@ -34,7 +34,28 @@ namespace FuncGen {
     }
   }
 
-  BitVector newton_raphson_divide(const BitVector& N, const BitVector& D) {
+  BitVector twos_complement_negate(const BitVector& b) {
+    return add_general_width_bv(~b, BitVector(b.bitLength(), 1));
+  }
+
+  BitVector newton_raphson_divide(const BitVector& NE, const BitVector& DE) {
+
+    BitVector N = NE;
+    BitVector D = DE;
+
+    // If D is negative, negate and then
+    bool dNegative = false;
+    if (high_bit(D) == 1) {
+      dNegative = true;
+      D = twos_complement_negate(D);
+    }
+
+    bool nNegative = false;
+    if (high_bit(N) == 1) {
+      nNegative = true;
+      N = twos_complement_negate(N);
+    }
+    
     assert(N.bitLength() == D.bitLength());
     
     int width = N.bitLength();
@@ -46,38 +67,41 @@ namespace FuncGen {
     // Step one normalize D
     FixedPoint D_(0, normalize_left(D, 1), -15);
     int shiftDistance = num_leading_zeros(D) - 1;
-    cout << "shift distance " << shiftDistance << endl;
 
-    cout << "D_     = " << D_ << endl;
-    cout << "1 / D_ = " << 1 / fixedPointToDouble(D_) << endl;
+    // If D is a power of 2
+    BitVector tentativeRes(width);
+    if (D_.bits == BitVector(width, 1 << (width - 2))) {
+      cout << "D = " << D << " is a power of 2" << endl;
+      int shiftDiv = width - shiftDistance - 2;
+      cout << "Division is just shifting by " << shiftDiv << endl;
+      tentativeRes = ashr(N, BitVector(width, shiftDiv));
+    } else {
+      cout << "shift distance " << shiftDistance << endl;
 
-    // Step two refine the approximation of 1 / D
-    for (int i = 0; i < 10; i++) {
-      X = add(X, mul(X, sub(one, mul(D_, X))));
+      cout << "D_     = " << D_ << endl;
+      cout << "1 / D_ = " << 1 / fixedPointToDouble(D_) << endl;
 
-      cout << "X_" << i << " = " << X << ", " << fixedPointToDouble(X) << endl;
+      // Step two refine the approximation of 1 / D
+      for (int i = 0; i < 10; i++) {
+        X = add(X, mul(X, sub(one, mul(D_, X))));
+
+        cout << "X_" << i << " = " << X << ", " << fixedPointToDouble(X) << endl;
+      }
+
+      BitVector longProd =
+        mul_general_width_bv(sign_extend(2*width, N),
+                             sign_extend(2*width, sign_magnitude_to_twos_complement(X.sign, X.bits)));
+
+      cout << "Long prod = " << longProd << endl;
+
+      tentativeRes = slice(ashr(longProd, BitVector(32, width + (width - shiftDistance) - 2)), 0, width);
     }
 
-    BitVector longProd =
-      mul_general_width_bv(sign_extend(2*width, N),
-                           sign_extend(2*width, sign_magnitude_to_twos_complement(X.sign, X.bits)));
-
-    cout << "Long prod = " << longProd << endl;
-
-    auto tentativeRes = slice(ashr(longProd, BitVector(32, width + (width - shiftDistance) - 2)), 0, width);
-
-    // If N is negative
-    if (highBit(N) == quad_value(1)) {
-      return add_general_width_bv(tentativeRes, BitVector(width, 1));
+    if (dNegative != nNegative) {
+      tentativeRes = twos_complement_negate(tentativeRes);
     }
 
     return tentativeRes;
-
-    // BitVector prod =
-    //   mul_general_width_bv(N,
-    //                        sign_magnitude_to_twos_complement(X.sign, X.bits));
-
-    // return prod;
   }
 
   TEST_CASE("NR test") {
@@ -129,6 +153,17 @@ namespace FuncGen {
       REQUIRE(prod == BitVector(16, 4));
     }
 
+    SECTION("Newton raphson 20 / 2") {
+      // D is initially a bitvector
+      BitVector N(16, 20);
+      BitVector D(16, 2);
+
+      auto prod = newton_raphson_divide(N, D);
+      cout << "Product         = " << prod << endl;
+
+      REQUIRE(prod == BitVector(16, 10));
+    }
+    
     SECTION("Newton raphson -20 / 5") {
       // D is initially a bitvector
       BitVector N(16, -20);
@@ -179,10 +214,24 @@ namespace FuncGen {
 
 
     SECTION("Randomized testing") {
+      // for (int i = 0; i < 1000; i++) {
+      //   cout << "Rand i = " << i << endl;
+      //   int Ni = iRand(-1000, 1000);
+      //   int Di = iRand(-100, 100);
+
+      //   cout << "Ni = " << Ni << endl;
+      //   cout << "Di = " << Di << endl;
+
+      //   cout << "Ni / Di  = " << Ni / Di << endl;
+      //   cout << "Ni / -Di = " << Ni / (-Di) << endl;
+
+      //   REQUIRE(-(Ni / Di) == (Ni / (-Di)));
+      // }
+      
       for (int i = 0; i < 100; i++) {
         cout << "Rand i = " << i << endl;
-        int Ni = iRand(-100, 1000);
-        int Di = iRand(-100, 1000);
+        int Ni = iRand(-1000, 1000);
+        int Di = iRand(-100, 100);
 
         cout << "Ni = " << Ni << endl;
         cout << "Di = " << Di << endl;
