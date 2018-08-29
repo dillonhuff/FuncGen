@@ -38,6 +38,10 @@ namespace FuncGen {
     return add_general_width_bv(~b, BitVector(b.bitLength(), 1));
   }
 
+  FixedPoint approximate(const FixedPoint& b) {
+    return FixedPoint(0, BitVector(b.bits.bitLength(), 1 << -b.exponent), b.exponent);
+  }
+
   BitVector newton_raphson_divide(const BitVector& NE, const BitVector& DE) {
 
     BitVector N = NE;
@@ -69,25 +73,16 @@ namespace FuncGen {
     } else {
 
       FixedPoint one = {BitVector(1, 0), BitVector(width, 1 << decimalPlace), -decimalPlace};
-      FixedPoint X(0, BitVector(width, 1 << decimalPlace), -decimalPlace);
-
-      BitVector one_tc = sign_magnitude_to_twos_complement(one.sign, one.bits);
-      BitVector X_tc = sign_magnitude_to_twos_complement(X.sign, X.bits);
-      BitVector D_tc = sign_magnitude_to_twos_complement(D_.sign, D_.bits);
+      FixedPoint X = approximate(D_);
 
       for (int i = 0; i < 5; i++) {
         X = add(X, mul(X, sub(one, mul(D_, X))));
-        //X_tc = add(X_tc, mul(X_tc, sub(one_tc, mul(D_tc, X_tc))));
       }
 
       BitVector longProd =
         mul_general_width_bv(sign_extend(2*width, N),
                              sign_extend(2*width, sign_magnitude_to_twos_complement(X.sign, X.bits)));
 
-      // BitVector longProd =
-      //   mul_general_width_bv(sign_extend(2*width, N),
-      //                        sign_extend(2*width, X_tc));
-      
       tentativeRes = slice(ashr(longProd, BitVector(32, width + (width - shiftDistance) - 2)), 0, width);
     }
 
