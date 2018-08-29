@@ -45,7 +45,8 @@ namespace FuncGen {
     
     // Step one normalize D
     FixedPoint D_(0, normalize_left(D, 1), -15);
-    //int shiftDistance = num_leading_zeros(D) - 1;
+    int shiftDistance = num_leading_zeros(D) - 1;
+    cout << "shift distance " << shiftDistance << endl;
 
     cout << "D_     = " << D_ << endl;
     cout << "1 / D_ = " << 1 / fixedPointToDouble(D_) << endl;
@@ -63,7 +64,7 @@ namespace FuncGen {
 
     cout << "Long prod = " << longProd << endl;
 
-    return slice(lshr(longProd, BitVector(32, width + 2)), 0, width);
+    return slice(lshr(longProd, BitVector(32, width + (width - shiftDistance) - 2)), 0, width);
     // BitVector prod =
     //   mul_general_width_bv(N,
     //                        sign_magnitude_to_twos_complement(X.sign, X.bits));
@@ -98,6 +99,17 @@ namespace FuncGen {
       REQUIRE(diff == flipSign(X));
     }
 
+    SECTION("Newton raphson 20 / 3") {
+      // D is initially a bitvector
+      BitVector N(16, 20);
+      BitVector D(16, 3);
+
+      auto prod = newton_raphson_divide(N, D);
+      cout << "Product         = " << prod << endl;
+
+      REQUIRE(prod == BitVector(16, 20 / 3));
+    }
+    
     SECTION("Newton raphson 20 / 5") {
       // D is initially a bitvector
       BitVector N(16, 20);
@@ -131,6 +143,29 @@ namespace FuncGen {
       REQUIRE(prod == BitVector(16, 14 / 6));
     }
 
+
+    SECTION("Randomized testing") {
+      for (int i = 0; i < 100; i++) {
+        cout << "Rand i = " << i << endl;
+        int Ni = iRand(0, 1000);
+        int Di = iRand(0, 1000);
+
+        cout << "Ni = " << Ni << endl;
+        cout << "Di = " << Di << endl;
+
+        BitVector N(16, Ni);
+        BitVector D(16, Di);
+
+        cout << "N = " << N << endl;
+        cout << "D = " << D << endl;
+
+        auto prod = newton_raphson_divide(N, D);
+        cout << "Product         = " << prod << endl;
+
+        REQUIRE(prod == BitVector(16, Ni / Di));
+      }
+    }
+    
   }
     
 

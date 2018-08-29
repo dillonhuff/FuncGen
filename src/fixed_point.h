@@ -6,6 +6,17 @@ using namespace std;
 
 namespace FuncGen {
 
+  static inline
+  int iRand(const int min, const int max) {
+    return min + (rand() % static_cast<int>(max - min + 1));
+  }
+
+  static inline
+  double fRand(double fMin, double fMax) {
+    double f = (double)rand() / RAND_MAX;
+    return fMin + f * (fMax - fMin);
+  }  
+
   class FixedPoint {
   public:
     BitVector sign;
