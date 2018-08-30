@@ -83,7 +83,6 @@ namespace FuncGen {
     assert(N.bitLength() == D.bitLength());
     
     int width = N.bitLength();
-    //FixedPoint D_(0, normalize_left(D, 1), -decimalPlace);
 
     BitVector D_ = normalize_left(D, 1);
     int shiftDistance = num_leading_zeros(D) - 1;
@@ -96,62 +95,22 @@ namespace FuncGen {
 
     } else {
 
-      //FixedPoint one = {BitVector(1, 0), BitVector(width, 1 << decimalPlace), -decimalPlace};
-      //FixedPoint X = approximate(D_.bits);
-
       int decimalPlace = width - 1;
       BitVector one = BitVector(width, 1 << decimalPlace);
-      //BitVector X = approximate(D_.bits).bits;
       BitVector X = approximate(D_);
 
       auto D_ = normalize_left(D, 1);
       for (int i = 0; i < 5; i++) {
         X = add(X, mul_as_fixed_point(X, sub(one, mul_as_fixed_point(D_, X, decimalPlace)), decimalPlace));
-
-        cout << "X_" << i << " = " << X << ", double = " << fixedPointToDouble(FixedPoint(X, -decimalPlace)) << endl;
-
-        // These are actually no-ops because X, D, and one are all positive
-        // auto one_tc = sign_magnitude_to_twos_complement(one.sign, one.bits);
-        // auto X_tc = sign_magnitude_to_twos_complement(X.sign, X.bits);
-        // auto D_tc = sign_magnitude_to_twos_complement(D_.sign, D_.bits);
-
-        // auto prod_tc = mul(D_tc, X_tc);
-        // auto prod_conv = twos_complement_to_sign_magnitude(prod_tc);
-
-        // auto diff_tc = sub(one_tc, prod_tc);
-
-        // auto diff_conv = twos_complement_to_sign_magnitude(diff_tc);
-
-        // cout << "diff_conv = " << FixedPoint(diff_conv.first, diff_conv.second, -15) << endl;
-
-        // auto prod = mul(D_, X);
-
-        // cout << "prod_conv   = " << FixedPoint(prod_conv.first, prod_conv.second, -15) << endl;
-        // cout << "prod   = " << prod << endl;
-
-        // auto diff = sub(one, prod);
-
-        // cout << "diff      = " << diff << endl;
-        
-        // X = add(X, mul(X, diff));
-        //cout << "X_" << i << " = " << X << ", double = " << fixedPointToDouble(X) << endl;
       }
 
-      // BitVector longProd =
-      //   mul_as_fixed_point(N, X, 15);
-
-      cout << "N = " << N << endl;
-      cout << "X = " << X << endl;
       BitVector longProd =
         mul_general_width_bv(zero_extend(2*width, N),
                              zero_extend(2*width, X));
 
-      cout << "long prod = " << longProd << endl;
-      // BitVector longProd =
-      //   mul_general_width_bv(sign_extend(2*width, N),
-      //                        sign_extend(2*width, sign_magnitude_to_twos_complement(X.sign, X.bits)));
-
-      tentativeRes = slice(ashr(longProd, BitVector(32, width + (width - shiftDistance) - 2)), 0, width);
+      int resShift = width + (width - shiftDistance - 2);
+      tentativeRes = slice(ashr(longProd,
+                                BitVector(32, resShift)), 0, width);
     }
 
     if (highBit(DE) != highBit(NE)) {
