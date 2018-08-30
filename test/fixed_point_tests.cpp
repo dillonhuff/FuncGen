@@ -38,7 +38,7 @@ namespace FuncGen {
     return add_general_width_bv(~b, BitVector(b.bitLength(), 1));
   }
 
-  FixedPoint approximate(const BitVector& b) {
+  BitVector approximate(const BitVector& b) {
     //cout << "b.bits = " << b << endl;
 
     BitVector normed = normalize_left(b, 0);
@@ -59,7 +59,9 @@ namespace FuncGen {
     
     cout << "Actual          1 / D = " << (1 / fixedPointToDouble(FixedPoint(0, b, -15))) << endl;
 
-    return q;
+    //return q.bits;
+
+    return normalize_left(quote, 0);
   }
 
   BitVector newton_raphson_divide(const BitVector& NE, const BitVector& DE) {
@@ -81,11 +83,13 @@ namespace FuncGen {
     assert(N.bitLength() == D.bitLength());
     
     int width = N.bitLength();
-    FixedPoint D_(0, normalize_left(D, 1), -decimalPlace);
+    //FixedPoint D_(0, normalize_left(D, 1), -decimalPlace);
+
+    BitVector D_ = normalize_left(D, 1);
     int shiftDistance = num_leading_zeros(D) - 1;
 
     BitVector tentativeRes(width);
-    if (D_.bits == BitVector(width, 1 << (width - 2))) {
+    if (D_ == BitVector(width, 1 << (width - 2))) {
 
       int shiftDiv = width - shiftDistance - 2;
       tentativeRes = ashr(N, BitVector(width, shiftDiv));
@@ -97,7 +101,8 @@ namespace FuncGen {
 
       int decimalPlace = width - 1;
       BitVector one = BitVector(width, 1 << decimalPlace);
-      BitVector X = approximate(D_.bits).bits;
+      //BitVector X = approximate(D_.bits).bits;
+      BitVector X = approximate(D_);
 
       auto D_ = normalize_left(D, 1);
       for (int i = 0; i < 5; i++) {
