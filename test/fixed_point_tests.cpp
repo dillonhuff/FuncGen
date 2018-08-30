@@ -59,27 +59,25 @@ namespace FuncGen {
     
     cout << "Actual          1 / D = " << (1 / fixedPointToDouble(FixedPoint(0, b, -15))) << endl;
 
-    //return q.bits;
-
     return normalize_left(quote, 0);
+  }
+
+  BitVector twos_complement_absolute_value(const BitVector& b) {
+    BitVector res = b;
+    if (high_bit(b) == 1) {
+      res = twos_complement_negate(res);
+    }
+
+    return res;
   }
 
   BitVector newton_raphson_divide(const BitVector& NE, const BitVector& DE) {
 
-    BitVector N = NE;
-    BitVector D = DE;
+    BitVector N = twos_complement_absolute_value(NE);
+    BitVector D = twos_complement_absolute_value(DE);
 
     int decimalPlace = NE.bitLength() - 1;
 
-    // If D is negative, negate and then
-    if (high_bit(D) == 1) {
-      D = twos_complement_negate(D);
-    }
-
-    if (high_bit(N) == 1) {
-      N = twos_complement_negate(N);
-    }
-    
     assert(N.bitLength() == D.bitLength());
     
     int width = N.bitLength();
