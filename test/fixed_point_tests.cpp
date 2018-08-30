@@ -38,8 +38,28 @@ namespace FuncGen {
     return add_general_width_bv(~b, BitVector(b.bitLength(), 1));
   }
 
-  FixedPoint approximate(const FixedPoint& b) {
-    return FixedPoint(0, BitVector(b.bits.bitLength(), 1 << -b.exponent), b.exponent);
+  FixedPoint approximate(const BitVector& b) {
+    //cout << "b.bits = " << b << endl;
+
+    BitVector normed = normalize_left(b, 0);
+    BitVector top_8 =
+      zero_extend(b.bitLength(),
+                  slice(normed, normed.bitLength() - 8, normed.bitLength()));
+    //cout << "top_8 bits = " << top_8 << endl;
+
+    assert(top_8.bitLength() == b.bitLength());
+
+    BitVector one(top_8.bitLength(), 1 << (top_8.bitLength() - 1));
+    auto quote = unsigned_divide(one, top_8);
+
+    cout << "quote = " << quote << endl;
+
+    FixedPoint q(0, normalize_left(quote, 0), -15);
+    cout << "Initial approximation = " << q << ", double = " << fixedPointToDouble(q) << endl;
+    
+    cout << "Actual          1 / D = " << (1 / fixedPointToDouble(FixedPoint(0, b, -15))) << endl;
+
+    return q;
   }
 
   BitVector newton_raphson_divide(const BitVector& NE, const BitVector& DE) {
@@ -72,16 +92,59 @@ namespace FuncGen {
 
     } else {
 
-      FixedPoint one = {BitVector(1, 0), BitVector(width, 1 << decimalPlace), -decimalPlace};
-      FixedPoint X = approximate(D_);
+      //FixedPoint one = {BitVector(1, 0), BitVector(width, 1 << decimalPlace), -decimalPlace};
+      //FixedPoint X = approximate(D_.bits);
 
+      int decimalPlace = width - 1;
+      BitVector one = BitVector(width, 1 << decimalPlace);
+      BitVector X = approximate(D_.bits).bits;
+
+      auto D_ = normalize_left(D, 1);
       for (int i = 0; i < 5; i++) {
-        X = add(X, mul(X, sub(one, mul(D_, X))));
+        X = add(X, mul_as_fixed_point(X, sub(one, mul_as_fixed_point(D_, X, decimalPlace)), decimalPlace));
+
+        cout << "X_" << i << " = " << X << ", double = " << fixedPointToDouble(FixedPoint(X, -decimalPlace)) << endl;
+
+        // These are actually no-ops because X, D, and one are all positive
+        // auto one_tc = sign_magnitude_to_twos_complement(one.sign, one.bits);
+        // auto X_tc = sign_magnitude_to_twos_complement(X.sign, X.bits);
+        // auto D_tc = sign_magnitude_to_twos_complement(D_.sign, D_.bits);
+
+        // auto prod_tc = mul(D_tc, X_tc);
+        // auto prod_conv = twos_complement_to_sign_magnitude(prod_tc);
+
+        // auto diff_tc = sub(one_tc, prod_tc);
+
+        // auto diff_conv = twos_complement_to_sign_magnitude(diff_tc);
+
+        // cout << "diff_conv = " << FixedPoint(diff_conv.first, diff_conv.second, -15) << endl;
+
+        // auto prod = mul(D_, X);
+
+        // cout << "prod_conv   = " << FixedPoint(prod_conv.first, prod_conv.second, -15) << endl;
+        // cout << "prod   = " << prod << endl;
+
+        // auto diff = sub(one, prod);
+
+        // cout << "diff      = " << diff << endl;
+        
+        // X = add(X, mul(X, diff));
+        //cout << "X_" << i << " = " << X << ", double = " << fixedPointToDouble(X) << endl;
       }
 
+      // BitVector longProd =
+      //   mul_as_fixed_point(N, X, 15);
+
+      cout << "N = " << N << endl;
+      cout << "X = " << X << endl;
       BitVector longProd =
-        mul_general_width_bv(sign_extend(2*width, N),
-                             sign_extend(2*width, sign_magnitude_to_twos_complement(X.sign, X.bits)));
+        mul_general_width_bv(zero_extend(2*width, N),
+                             zero_extend(2*width, X));
+
+      cout << "long prod = " << longProd << endl;
+      // BitVector longProd =
+      //   mul_general_width_bv(sign_extend(2*width, N),
+      //                        sign_extend(2*width, sign_magnitude_to_twos_complement(X.sign, X.bits)));
 
       tentativeRes = slice(ashr(longProd, BitVector(32, width + (width - shiftDistance) - 2)), 0, width);
     }

@@ -107,13 +107,29 @@ namespace FuncGen {
 
     cout << "ProdBits = " << prodBits << endl;
 
-    auto res = slice(lshr(prodBits, BitVector(32, a.bitLength() - 1)), 0, a.bitLength());
+    auto res = slice(lshr(prodBits, BitVector(32, a.bitLength() - 2)), 0, a.bitLength());
 
     assert(res.bitLength() == a.bitLength());
 
     return res;
   }
 
+  static inline
+  BitVector mul_as_fixed_point(const BitVector& a, const BitVector& b, const int decimal_place) {
+
+    auto aBitsExt = zero_extend(2*a.bitLength(), a);
+    auto bBitsExt = zero_extend(2*b.bitLength(), b);
+    auto prodBits = mul_general_width_bv(aBitsExt, bBitsExt);
+
+    cout << "ProdBits = " << prodBits << endl;
+
+    auto res = slice(lshr(prodBits, BitVector(32, decimal_place)), 0, a.bitLength());
+
+    assert(res.bitLength() == a.bitLength());
+
+    return res;
+  }
+  
   static inline
   BitVector add(const BitVector& a, const BitVector& b) {
     return add_general_width_bv(a, b);
