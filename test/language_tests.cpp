@@ -650,10 +650,36 @@ namespace FuncGen {
 
   }
 
+  Function* buildTCNeg(const int width, Context& c) {
+    auto f = c.newUnaryFunction("tc_neg_" + to_string(width),
+                                "in", c.arrayType(width),
+                                "out", c.arrayType(width));
+
+    cout << "starting" << endl;
+    auto in = f->getValue("in");
+
+    auto out = f->getValue("out");
+    auto invIn = f->invert(in);
+
+    cout << "Computing res in tc neg" << endl;
+    
+    auto res = f->add(invIn, f->constant(width, 1));
+
+    cout << "Assigned res" << endl;
+
+    f->assign(out, res);
+
+    cout << "don" << endl;
+
+    return f;
+  }
+
   TEST_CASE("16 bit Newton Raphson") {
     int width = 16;
 
     Context c;
+
+    auto tcNegW = buildTCNeg(width, c);
 
     auto abs = c.newFunction("twos_complement_absolute_value",
                              {{"in", c.arrayType(width)}},
@@ -662,7 +688,7 @@ namespace FuncGen {
     auto out = abs->getValue("out");
 
     auto topBit = abs->slice(width - 1, width - 1, in);
-    Cases absCases{{BitVector(1, 0), in}, {BitVector(1, 1), nullptr}};
+    Cases absCases{{BitVector(1, 0), in}, {BitVector(1, 1), abs->unop(tcNegW, in)}};
     auto caseRes = abs->caseStatement(topBit, absCases);
     abs->assign(out, caseRes);
     
@@ -675,6 +701,15 @@ namespace FuncGen {
 
         REQUIRE(sim.getOutput("out") == BitVector(16, 3));
       }
+
+      SECTION("Negative to positive") {
+        Simulator sim(*abs);
+        sim.setInput("in", tc_neg(BitVector(16, 3)));
+        sim.evaluate();
+
+        REQUIRE(sim.getOutput("out") == BitVector(16, 3));
+      }
+
     }
 
     auto f = c.newFunction("newton_raphson_divide_" + to_string(width),

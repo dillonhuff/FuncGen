@@ -64,6 +64,22 @@ namespace FuncGen {
     return freshValue;
   }
 
+  Expression* Function::unop(const std::string& str, Value* arg) {
+    Function* f = context.getFunction(str);
+    assert(f->inputMap().size() == 1);
+
+    string argName = begin(f->inputMap())->first;
+    return new FunctionCall(str, {{argName, arg}});
+  }
+
+  Expression* Function::unop(Function* const f, Value* arg) {
+    //Function* f = context.getFunction(str);
+    assert(f->inputMap().size() == 1);
+
+    string argName = begin(f->inputMap())->first;
+    return new FunctionCall(f->getName(), {{argName, arg}});
+  }
+  
   Value* Function::functionCall(const std::string& str, Value* arg) {
     Function* f = context.getFunction(str);
     assert(f->inputMap().size() == 1);

@@ -123,20 +123,16 @@ namespace FuncGen {
         
       } else if (hasPrefix(name, "slice_")) {
         std::string pre = "slice_";
-        // int firstNumEndIndex = pre.size();
-        // while (isdigit(name[firstNumEndIndex])) {
-        //   firstNumEndIndex++;
-        // }
 
-        std::cout << "slice name       = " << name << std::endl;
+        //std::cout << "slice name       = " << name << std::endl;
         size_t sz;
         int endSlice = stoi(name.substr(pre.size()), &sz);
 
-        cout << "endSlice = " << endSlice << endl;
-        cout << "next substr = " << name.substr(sz + 1) << endl;
+        //cout << "endSlice = " << endSlice << endl;
+        //cout << "next substr = " << name.substr(sz + 1) << endl;
         int startSlice = stoi(name.substr(pre.size() + sz + 1)); //stoi(name.substr(firstNumEndIndex)); //pre.size() + 2));
 
-        std::cout << "Start slice at " << startSlice << " end at " << endSlice << std::endl;
+        //std::cout << "Start slice at " << startSlice << " end at " << endSlice << std::endl;
         Value* toShift = call.getInput("in");
 
         //Value* res = call.getResult();
@@ -145,6 +141,11 @@ namespace FuncGen {
         //std::cout << "SliceRes = " << sliceRes << std::endl;
         return sliceRes;
         //setValue(res, sliceRes);
+      } else if (hasPrefix(name, "invert_")) {
+        //std::string pre = "logical_shift_right_";
+        Value* toInvert = call.getInput("in");
+
+        return ~evaluateExpression(toInvert);
       } else if (hasPrefix(name, "logical_shift_right_")) {
         std::string pre = "logical_shift_right_";
         int shiftAmount = stoi(name.substr(pre.size()));

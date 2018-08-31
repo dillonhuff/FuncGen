@@ -314,6 +314,9 @@ namespace FuncGen {
     Value* caseStatement(Value* in, const std::vector<std::pair<BitVector, BitVector> >& cases);
 
     Value* caseStatement(Value* in, const Cases& cases);
+
+    Expression* unop(const std::string& name, Value* arg);
+    Expression* unop(Function* const f, Value* arg);
     
     Value* functionCall(const std::string& str, const std::map<std::string, Value*>& args);
     Value* functionCall(const std::string& str, Value* arg);
@@ -395,6 +398,15 @@ namespace FuncGen {
 
       Value* freshValue = makeUniqueValue(v->bitWidth());
       statements.push_back(new Assignment(freshValue, new FunctionCall(shiftName, {{"in", v}})));
+
+      return freshValue;
+    }
+
+    Value* invert(Value* v) {
+      std::string invName = "invert_" + std::to_string(v->bitWidth());
+
+      Value* freshValue = makeUniqueValue(v->bitWidth());
+      statements.push_back(new Assignment(freshValue, new FunctionCall(invName, {{"in", v}})));
 
       return freshValue;
     }
@@ -490,6 +502,14 @@ namespace FuncGen {
       auto f = new Function(*this, name, inputs, outputs);
       functions.insert({name, f});
       return f;
+    }
+
+    Function* newUnaryFunction(const std::string& name,
+                               const std::string& arg0Name,
+                               Data* arg0Type,
+                               const std::string& arg1Name,
+                               Data* arg1Type) {
+      return newFunction(name, {{arg0Name, arg0Type}}, {{arg1Name, arg1Type}});
     }
 
     // Synthesize by unfolding the entire compute graph
