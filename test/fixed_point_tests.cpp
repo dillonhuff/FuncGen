@@ -38,21 +38,43 @@ namespace FuncGen {
     return add_general_width_bv(~b, BitVector(b.bitLength(), 1));
   }
 
-  BitVector approximate(const BitVector& b) {
-    //cout << "b.bits = " << b << endl;
+  BitVector back_extend(const int total_bits, const BitVector& b) {
+    assert(total_bits >= b.bitLength());
 
+    return shl(zero_extend(total_bits, b), BitVector(32, total_bits - b.bitLength()));
+  }
+
+  BitVector approximate(const BitVector& b) {
+    cout << "b.bits = " << b << endl;
+
+    int width = b.bitLength();
+    int approximationWidth = 10;
     BitVector normed = normalize_left(b, 0);
+
+    cout << "normed = " << normed << endl;
+    
     BitVector top_8 =
       zero_extend(b.bitLength(),
-                  slice(normed, normed.bitLength() - 8, normed.bitLength()));
+                  slice(normed,
+                        normed.bitLength() - approximationWidth,
+                        normed.bitLength()));
     //cout << "top_8 bits = " << top_8 << endl;
 
     assert(top_8.bitLength() == b.bitLength());
 
     BitVector one(top_8.bitLength(), 1 << (top_8.bitLength() - 1));
-    auto quote = unsigned_divide(one, top_8);
 
+    auto one_ext = back_extend(2*width, one);
+    auto top_8_ext = zero_extend(2*width, top_8);
+
+    auto quote = unsigned_divide(one_ext, top_8_ext);
+
+    cout << "one   = " << one_ext << endl;
+    cout << "top   = " << top_8_ext << endl;
     cout << "quote = " << quote << endl;
+
+    quote = slice(normalize_left(quote, 0), quote.bitLength() - width, quote.bitLength());
+
 
     FixedPoint q(0, normalize_left(quote, 0), -15);
     cout << "Initial approximation = " << q << ", double = " << fixedPointToDouble(q) << endl;
@@ -98,7 +120,7 @@ namespace FuncGen {
       BitVector X = approximate(D_);
 
       auto D_ = normalize_left(D, 1);
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < 2; i++) {
         X = add(X, mul_as_fixed_point(X, sub(one, mul_as_fixed_point(D_, X, decimalPlace)), decimalPlace));
       }
 
