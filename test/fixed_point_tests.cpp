@@ -120,7 +120,7 @@ namespace FuncGen {
       BitVector X = approximate(D_);
 
       auto D_ = normalize_left(D, 1);
-      for (int i = 0; i < 2; i++) {
+      for (int i = 0; i < 1; i++) {
         X = add(X, mul_as_fixed_point(X, sub(one, mul_as_fixed_point(D_, X, decimalPlace)), decimalPlace));
       }
 
