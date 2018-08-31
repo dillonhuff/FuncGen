@@ -658,15 +658,19 @@ namespace FuncGen {
     auto abs = c.newFunction("twos_complement_absolute_value",
                              {{"in", c.arrayType(width)}},
                              {{"out", c.arrayType(width)}});
-    auto topBit = abs->slice(width - 1, width - 1, abs->getValue("in"));
-    Cases absCases{{BitVector(1, 0), nullptr}, {BitVector(1, 1), nullptr}};
-    auto caseStmt = abs->caseStatement(topBit, cases);
+    auto in = abs->getValue("in");
+    auto out = abs->getValue("out");
+
+    auto topBit = abs->slice(width - 1, width - 1, in);
+    Cases absCases{{BitVector(1, 0), in}, {BitVector(1, 1), nullptr}};
+    auto caseRes = abs->caseStatement(topBit, absCases);
+    abs->assign(out, caseRes);
     
     SECTION("Twos complement absolute value") {
 
-      SECTION("Negative to positive") {
+      SECTION("Positive to positive") {
         Simulator sim(*abs);
-        sim.setInput("in", tc_neg(BitVector(16, 3)));
+        sim.setInput("in", BitVector(16, 3));
         sim.evaluate();
 
         REQUIRE(sim.getOutput("out") == BitVector(16, 3));

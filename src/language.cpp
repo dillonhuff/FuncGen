@@ -13,12 +13,23 @@ namespace FuncGen {
 
     Cases caseExprs;
     for (auto c : cases) {
-      caseExprs.push_back({c, new ConstantValue(new )});
+      caseExprs.push_back({c.first, constant(c.second)});
     }
     statements.push_back(new Case(freshValue, in, caseExprs));
     return freshValue;
   }
 
+  Value*
+  Function::caseStatement(Value* in, const Cases& cases) {
+    assert(cases.size() > 0);
+
+    int resWidth = cases.at(0).second->bitWidth();
+    Value* freshValue = makeUniqueValue(resWidth);
+    statements.push_back(new Case(freshValue, in, cases));
+
+    return freshValue;
+  }
+  
   Value* Function::makeUniqueValue(const int width) {
     Value* v = new Value(context.arrayType(width));
     string name = "av_" + std::to_string(uniqueNum);
@@ -28,12 +39,21 @@ namespace FuncGen {
   }
 
   Value* Function::constant(const int bitWidth, const int value) {
-    ConstantValue* v = new ConstantValue(context.arrayType(bitWidth),
-                                         BitVector(bitWidth, value));
+    return constant(BitVector(bitWidth, value));
+    // ConstantValue* v = new ConstantValue(context.arrayType(bitWidth),
+    //                                      BitVector(bitWidth, value));
                                            
+    // values.insert({"const_" + std::to_string(uniqueNum), v});
+    // uniqueNum++;
+    // return v;
+  }
+
+  Value* Function::constant(const BitVector& b) {
+    ConstantValue* v = new ConstantValue(context.arrayType(b.bitLength()), b);
     values.insert({"const_" + std::to_string(uniqueNum), v});
     uniqueNum++;
     return v;
+
   }
 
   Value* Function::functionCall(const std::string& str,

@@ -2,6 +2,8 @@
 
 #include "language.h"
 
+using namespace std;
+
 namespace FuncGen {
 
 
@@ -121,10 +123,20 @@ namespace FuncGen {
         
       } else if (hasPrefix(name, "slice_")) {
         std::string pre = "slice_";
-        int endSlice = stoi(name.substr(pre.size()));
-        int startSlice = stoi(name.substr(pre.size() + 2));
+        // int firstNumEndIndex = pre.size();
+        // while (isdigit(name[firstNumEndIndex])) {
+        //   firstNumEndIndex++;
+        // }
 
-        //std::cout << "Start slice at " << startSlice << " end at " << endSlice << std::endl;
+        std::cout << "slice name       = " << name << std::endl;
+        size_t sz;
+        int endSlice = stoi(name.substr(pre.size()), &sz);
+
+        cout << "endSlice = " << endSlice << endl;
+        cout << "next substr = " << name.substr(sz + 1) << endl;
+        int startSlice = stoi(name.substr(pre.size() + sz + 1)); //stoi(name.substr(firstNumEndIndex)); //pre.size() + 2));
+
+        std::cout << "Start slice at " << startSlice << " end at " << endSlice << std::endl;
         Value* toShift = call.getInput("in");
 
         //Value* res = call.getResult();
@@ -173,6 +185,8 @@ namespace FuncGen {
     }
 
     BitVector evaluateExpression(Expression* expr) {
+      assert(expr != nullptr);
+      
       if (expr->type() == EXPRESSION_TYPE_FUNCTION_CALL) {
         return evaluateFunctionCall(*static_cast<FunctionCall*>(expr));
       } else if (expr->type() == EXPRESSION_TYPE_CONSTANT) {
@@ -180,6 +194,7 @@ namespace FuncGen {
       } else if (expr->type() == EXPRESSION_TYPE_VARIABLE) {
         return getValue(static_cast<Value*>(expr));
       }
+
       assert(false);
     }
 

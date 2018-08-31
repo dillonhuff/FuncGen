@@ -48,14 +48,6 @@ namespace FuncGen {
     EXPRESSION_TYPE_CASE,
   };
 
-  // class Expression {
-  // };
-
-  // enum ExpressionType {
-  //   VALUE_TYPE_VAR,
-  //   VALUE_TYPE_CONST,
-  // };
-
   class Expression {
 
     Data* dataType;
@@ -321,6 +313,8 @@ namespace FuncGen {
 
     Value* caseStatement(Value* in, const std::vector<std::pair<BitVector, BitVector> >& cases);
 
+    Value* caseStatement(Value* in, const Cases& cases);
+    
     Value* functionCall(const std::string& str, const std::map<std::string, Value*>& args);
     Value* functionCall(const std::string& str, Value* arg);
 
@@ -445,6 +439,7 @@ namespace FuncGen {
     }
 
     Value* constant(const int bitWidth, const int value);
+    Value* constant(const BitVector& b);
 
     void repeat(const int numIterations, Statement* e) {
       statements.push_back(new RepeatStmt(numIterations, e));
