@@ -135,28 +135,26 @@ namespace FuncGen {
         //std::cout << "Start slice at " << startSlice << " end at " << endSlice << std::endl;
         Value* toShift = call.getInput("in");
 
-        //Value* res = call.getResult();
 
         auto sliceRes = slice(evaluateExpression(toShift), startSlice, endSlice + 1);
-        //std::cout << "SliceRes = " << sliceRes << std::endl;
-        return sliceRes;
-        //setValue(res, sliceRes);
-      } else if (hasPrefix(name, "invert_")) {
-        //std::string pre = "logical_shift_right_";
-        Value* toInvert = call.getInput("in");
 
+        return sliceRes;
+
+      } else if (hasPrefix(name, "invert_")) {
+
+        Value* toInvert = call.getInput("in");
         return ~evaluateExpression(toInvert);
+
       } else if (hasPrefix(name, "logical_shift_right_")) {
+
         std::string pre = "logical_shift_right_";
         int shiftAmount = stoi(name.substr(pre.size()));
 
         Value* toShift = call.getInput("in");
-
-        //Value* res = call.getResult();
-
         return lshr(evaluateExpression(toShift), BitVector(32, shiftAmount));
-      //setValue(res, lshr(getValue(toShift), BitVector(32, shiftAmount)));
+
       } else if (hasPrefix(name, "add_")) {
+
         Value* in0 = call.getInput("in0");
         Value* in1 = call.getInput("in1");
 

@@ -60,7 +60,7 @@ namespace FuncGen {
                                 const std::map<std::string, Value*>& args) {
     Function* f = context.getFunction(str);
     Value* freshValue = makeUniqueValue(f->outputValue()->bitWidth());
-    statements.push_back(new Assignment(freshValue, new FunctionCall(str, args)));
+    statements.push_back(new Assignment(freshValue, new FunctionCall(f, args)));
     return freshValue;
   }
 
@@ -69,7 +69,7 @@ namespace FuncGen {
     assert(f->inputMap().size() == 1);
 
     string argName = begin(f->inputMap())->first;
-    return new FunctionCall(str, {{argName, arg}});
+    return new FunctionCall(f, {{argName, arg}});
   }
 
   Expression* Function::unop(Function* const f, Value* arg) {
@@ -77,7 +77,7 @@ namespace FuncGen {
     assert(f->inputMap().size() == 1);
 
     string argName = begin(f->inputMap())->first;
-    return new FunctionCall(f->getName(), {{argName, arg}});
+    return new FunctionCall(f, {{argName, arg}});
   }
   
   Value* Function::functionCall(const std::string& str, Value* arg) {
@@ -87,7 +87,7 @@ namespace FuncGen {
     string argName = begin(f->inputMap())->first;
 
     Value* freshValue = makeUniqueValue(f->outputValue()->bitWidth());
-    statements.push_back(new Assignment(freshValue, new FunctionCall(str, {{argName, arg}})));
+    statements.push_back(new Assignment(freshValue, new FunctionCall(f, {{argName, arg}})));
     return freshValue;
     
   }
@@ -126,4 +126,52 @@ namespace FuncGen {
 
     return table;
   }
+
+  FunctionCall::FunctionCall(Function* function_,
+                             const std::map<std::string, Value*>& inputs_) :
+      Expression(function_->outputValue()->getData()),
+      function(function_),
+      inputs(inputs_) {}
+
+  std::string FunctionCall::functionName() const {
+    return function->getName();
+  }
+
+  Value* Function::unsignedDivide(Value* a, Value* b) {
+    assert(a != nullptr);
+    assert(b != nullptr);
+
+    assert(sameWidth(*a, *b));
+
+    std::string divideName = "unsigned_divide_" + std::to_string(a->bitWidth());
+    Value* freshValue = makeUniqueValue(a->bitWidth());
+    statements.push_back(new Assignment(freshValue,
+                                        new FunctionCall(getContext().getBuiltin("unsigned_divide", a->bitWidth()), {{"in0", a}, {"in1", b}})));
+    return freshValue;
+  }
+
+  Value* Function::multiply(Value* a, Value* b) {
+    assert(a != nullptr);
+    assert(b != nullptr);
+
+    assert(sameWidth(*a, *b));
+
+    //std::string divideName = "multiply_" + std:
+    Value* freshValue = makeUniqueValue(a->bitWidth());
+    statements.push_back(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("multiply", a->getBitWidth()), {{"in0", a}, {"in1", b}})));
+    return freshValue;
+  }
+
+  Value* Function::subtract(Value* a, Value* b) {
+    assert(a != nullptr);
+    assert(b != nullptr);
+
+    assert(sameWidth(*a, *b));
+
+    //std::string divideName = "subtract_" + std::to_string(a->bitWidth());
+    Value* freshValue = makeUniqueValue(a->bitWidth());
+    statements.push_back(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("subtract", a->bitWidth()), {{"in0", a}, {"in1", b}})));
+    return freshValue;
+  }
+  
 }

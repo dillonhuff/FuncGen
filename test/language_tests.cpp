@@ -716,14 +716,22 @@ namespace FuncGen {
                          {{"N", c.arrayType(width)}, {"D", c.arrayType(width)}},
                          {{"Q", c.arrayType(width)}});
 
+    auto N = f->getValue("N");
+    auto D = f->getValue("D");
+    
+    auto absN = f->freshVal(width);
+    auto absD = f->freshVal(width);
 
-    SECTION("8 / 3 == 2") {
+    f->assign(absN, f->unop(abs, N));
+    f->assign(absD, f->unop(abs, D));
+
+    SECTION("8 / 4 == 2") {
       Simulator sim(*f);
       sim.setInput("N", BitVector(16, 8));
-      sim.setInput("D", BitVector(16, 3));
+      sim.setInput("D", BitVector(16, 4));
       sim.evaluate();
 
-      //REQUIRE(sim.getOutput("Q") == BitVector(16, 8 / 3));
+      REQUIRE(sim.getOutput("Q") == BitVector(16, 8 / 3));
     }
   }
 

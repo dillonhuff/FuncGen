@@ -7,10 +7,12 @@
 
 using namespace dbhc;
 using namespace bsim;
+using namespace std;
 
 namespace FuncGen {
 
   class Context;
+  class Function;
 
   typedef bsim::quad_value_bit_vector BitVector;
 
@@ -60,7 +62,13 @@ namespace FuncGen {
       return EXPRESSION_TYPE_VARIABLE;
     }
 
+    Data* getData() const {
+      return dataType;
+    }
+
     int bitWidth() const {
+      assert(dataType != nullptr);
+      
       return dataType->bitWidth();
     }
 
@@ -86,6 +94,7 @@ namespace FuncGen {
   };
 
   static inline bool sameWidth(const Value& a, const Value& b) {
+    cout << "Getting same width" << endl;
     return a.bitWidth() == b.bitWidth();
   }
 
@@ -182,22 +191,13 @@ namespace FuncGen {
 
   //class FunctionCall : public Statement {
   class FunctionCall : public Expression {
-    std::string funcName;
-    //    Value* result;
-
+    Function* function;
     std::map<std::string, Value*> inputs;
     
   public:
-    FunctionCall(const std::string& funcName_,
-                 //Value* result_,
-                 const std::map<std::string, Value*>& inputs_) :
-      Expression(nullptr),
-      funcName(funcName_), //result(result_),
-      inputs(inputs_) {}
 
-    // Value* getResult() const {
-    //   return result;
-    // }
+    FunctionCall(Function* function,
+                 const std::map<std::string, Value*>& inputs_);
 
     const std::map<std::string, Value*>& getInputs() const {
       return inputs;
@@ -209,9 +209,7 @@ namespace FuncGen {
       return map_find(name, inputs);
     }
 
-    std::string functionName() const {
-      return funcName;
-    }
+    std::string functionName() const;
 
     virtual ExpressionType type() const {
       return EXPRESSION_TYPE_FUNCTION_CALL;
@@ -327,42 +325,46 @@ namespace FuncGen {
 
     Value* makeUniqueValue(const int width);
 
-    Value* unsignedDivide(Value* a, Value* b) {
-      assert(a != nullptr);
-      assert(b != nullptr);
-
-      assert(sameWidth(*a, *b));
-
-      std::string divideName = "unsigned_divide_" + std::to_string(a->bitWidth());
-      Value* freshValue = makeUniqueValue(a->bitWidth());
-      statements.push_back(new Assignment(freshValue,
-                                          new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
-      return freshValue;
+    inline Value* freshVal(const int width) {
+      return makeUniqueValue(width);
     }
 
-    Value* multiply(Value* a, Value* b) {
-      assert(a != nullptr);
-      assert(b != nullptr);
+    Value* unsignedDivide(Value* a, Value* b);// {
+    //   assert(a != nullptr);
+    //   assert(b != nullptr);
 
-      assert(sameWidth(*a, *b));
+    //   assert(sameWidth(*a, *b));
 
-      std::string divideName = "multiply_" + std::to_string(a->bitWidth());
-      Value* freshValue = makeUniqueValue(a->bitWidth());
-      statements.push_back(new Assignment(freshValue, new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
-      return freshValue;
-    }
+    //   std::string divideName = "unsigned_divide_" + std::to_string(a->bitWidth());
+    //   Value* freshValue = makeUniqueValue(a->bitWidth());
+    //   statements.push_back(new Assignment(freshValue,
+    //                                       new FunctionCall(getContext().getBuiltin("unsigned_divide", a->bitWidth()), {{"in0", a}, {"in1", b}})));
+    //   return freshValue;
+    // }
 
-    Value* subtract(Value* a, Value* b) {
-      assert(a != nullptr);
-      assert(b != nullptr);
+    Value* multiply(Value* a, Value* b); // {
+    //   assert(a != nullptr);
+    //   assert(b != nullptr);
 
-      assert(sameWidth(*a, *b));
+    //   assert(sameWidth(*a, *b));
 
-      std::string divideName = "subtract_" + std::to_string(a->bitWidth());
-      Value* freshValue = makeUniqueValue(a->bitWidth());
-      statements.push_back(new Assignment(freshValue, new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
-      return freshValue;
-    }
+    //   std::string divideName = "multiply_" + std::to_string(a->bitWidth());
+    //   Value* freshValue = makeUniqueValue(a->bitWidth());
+    //   statements.push_back(new Assignment(freshValue, new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
+    //   return freshValue;
+    // }
+
+    Value* subtract(Value* a, Value* b); // {
+    //   assert(a != nullptr);
+    //   assert(b != nullptr);
+
+    //   assert(sameWidth(*a, *b));
+
+    //   std::string divideName = "subtract_" + std::to_string(a->bitWidth());
+    //   Value* freshValue = makeUniqueValue(a->bitWidth());
+    //   statements.push_back(new Assignment(freshValue, new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
+    //   return freshValue;
+    // }
 
     Value* add(Value* a, Value* b) {
       assert(a != nullptr);
@@ -414,10 +416,15 @@ namespace FuncGen {
     void assign(Value* a, Value* b) {
       assert(a != nullptr);
       assert(b != nullptr);
+
+      cout << "a/b not null" << endl;
+      
       if (!sameWidth(*a, *b)) {
         std::cout << "ERROR: Mismatched widths in assign " << a->bitWidth() << " and " << b->bitWidth() << std::endl;
         assert(false);
       }
+
+      cout << "Assigning" << endl;
 
       statements.push_back(new Assignment(a, b));
     }
@@ -490,6 +497,10 @@ namespace FuncGen {
 
       }
       return map_find(width, datas);
+    }
+
+    Function* getBuiltin(const std::string& name, const int width) const {
+      assert(false);
     }
 
     Function* getFunction(const std::string& name) const {
