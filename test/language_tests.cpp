@@ -650,6 +650,44 @@ namespace FuncGen {
 
   }
 
+  TEST_CASE("16 bit Newton Raphson") {
+    int width = 16;
+
+    Context c;
+
+    auto abs = c.newFunction("twos_complement_absolute_value",
+                             {{"in", c.arrayType(width)}},
+                             {{"out", c.arrayType(width)}});
+    auto topBit = abs->slice(width - 1, width - 1, abs->getValue("in"));
+    Cases absCases{{BitVector(1, 0), nullptr}, {BitVector(1, 1), nullptr}};
+    auto caseStmt = abs->caseStatement(topBit, cases);
+    
+    SECTION("Twos complement absolute value") {
+
+      SECTION("Negative to positive") {
+        Simulator sim(*abs);
+        sim.setInput("in", tc_neg(BitVector(16, 3)));
+        sim.evaluate();
+
+        REQUIRE(sim.getOutput("out") == BitVector(16, 3));
+      }
+    }
+
+    auto f = c.newFunction("newton_raphson_divide_" + to_string(width),
+                         {{"N", c.arrayType(width)}, {"D", c.arrayType(width)}},
+                         {{"Q", c.arrayType(width)}});
+
+
+    SECTION("8 / 3 == 2") {
+      Simulator sim(*f);
+      sim.setInput("N", BitVector(16, 8));
+      sim.setInput("D", BitVector(16, 3));
+      sim.evaluate();
+
+      //REQUIRE(sim.getOutput("Q") == BitVector(16, 8 / 3));
+    }
+  }
+
   // TEST_CASE("8 bit newton raphson experiment") {
 
   //   FixedPoint f10{BitVector(8, 10), 0};

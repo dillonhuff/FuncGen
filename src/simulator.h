@@ -192,7 +192,7 @@ namespace FuncGen {
         BitVector inVal = getValue(input);
         for (auto c : assign.getCases()) {
           if (inVal == c.first) {
-            setValue(assign.getResult(), c.second);
+            setValue(assign.getResult(), evaluateExpression(c.second));
             return;
           }
         }

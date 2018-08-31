@@ -105,7 +105,7 @@ namespace FuncGen {
     auto bBitsExt = zero_extend(2*b.bitLength(), b);
     auto prodBits = mul_general_width_bv(aBitsExt, bBitsExt);
 
-    cout << "ProdBits = " << prodBits << endl;
+    //cout << "ProdBits = " << prodBits << endl;
 
     auto res = slice(lshr(prodBits, BitVector(32, a.bitLength() - 2)), 0, a.bitLength());
 
@@ -260,7 +260,7 @@ namespace FuncGen {
     // auto numShiftedExp = num.exponent - shiftAmount;
 
     // FixedPoint shiftedNum{numShiftedBits, numShiftedExp};
-    cout << "Shifted num = " << shiftedNum << endl;
+    //cout << "Shifted num = " << shiftedNum << endl;
 
     // auto prodBits = mul_general_width_bv(aBitsExt, bBitsExt);
     // return {prodBits, b.exponent + a.exponent};
@@ -289,11 +289,11 @@ namespace FuncGen {
     auto a = leftExtend(aE);
     auto b = renormalizeExponent(a.exponent, bE);
 
-    cout << "aE = " << aE << endl;
-    cout << "bE = " << bE << endl;
+    // cout << "aE = " << aE << endl;
+    // cout << "bE = " << bE << endl;
     
-    cout << "a  = " << a << endl;
-    cout << "b  = " << b << endl;
+    // cout << "a  = " << a << endl;
+    // cout << "b  = " << b << endl;
     //auto b = leftExtend(bE);
 
     
@@ -341,4 +341,22 @@ namespace FuncGen {
     return shl(a, BitVector(32, i));
   }
 
+  static inline
+  BitVector twos_complement_negate(const BitVector& b) {
+    return add_general_width_bv(~b, BitVector(b.bitLength(), 1));
+  }
+
+  static inline
+  BitVector tc_neg(const BitVector& b) {
+    return twos_complement_negate(b);
+  }
+  
+  static inline
+  BitVector back_extend(const int total_bits, const BitVector& b) {
+    assert(total_bits >= b.bitLength());
+
+    return shl(zero_extend(total_bits, b), BitVector(32, total_bits - b.bitLength()));
+  }
+
+  
 }

@@ -101,6 +101,8 @@ namespace FuncGen {
     return sameWidth(*a, *b);
   }
 
+  typedef std::vector<std::pair<BitVector, Expression*> > Cases;
+
   enum StatementType {
     STATEMENT_TYPE_FUNCTION_CALL,
     STATEMENT_TYPE_CASE,
@@ -125,15 +127,20 @@ namespace FuncGen {
   class Case : public Statement {
     Value* result;
     Value* in;
-    std::vector<std::pair<BitVector, BitVector> > cases;
+    std::vector<std::pair<BitVector, Expression*> > cases;
 
   public:
 
+    // Case(Value* result_,
+    //      Value* in_,
+    //      const std::vector<std::pair<BitVector, BitVector> >& cases_) :
+    //   result(result_), in(in_), cases() {}
+
     Case(Value* result_,
          Value* in_,
-         const std::vector<std::pair<BitVector, BitVector> >& cases_) :
+         const std::vector<std::pair<BitVector, Expression*> >& cases_) :
       result(result_), in(in_), cases(cases_) {}
-
+    
     Value* getResult() const {
       return result;
     }
@@ -142,7 +149,7 @@ namespace FuncGen {
       return in;
     }
     
-    std::vector<std::pair<BitVector, BitVector> >& getCases() {
+    std::vector<std::pair<BitVector, Expression*> >& getCases() {
       return cases;
     }
 
@@ -526,4 +533,14 @@ namespace FuncGen {
   Function*
   precomputeTable(const std::string& tableName, Function* f, Context& c);
 
+  // // Problem: How do I write statements and functions in a way that is easy
+  // // but also embedded in C++? Expressions are doable. Why? I guess because
+  // // they can be constructed without reference to the current enclosing statement?
+  // // Whereas statements are usually constructed recursively inside one another.
+  // // This makes things a little trickier.
+  // static Context* globalContext;
+
+  // void setGlobalContext(Context* c);
+
 }
+

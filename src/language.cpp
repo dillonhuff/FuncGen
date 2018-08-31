@@ -10,7 +10,12 @@ namespace FuncGen {
     assert(cases.size() > 0);
     int resWidth = cases.at(0).second.bitLength();
     Value* freshValue = makeUniqueValue(resWidth);
-    statements.push_back(new Case(freshValue, in, cases));
+
+    Cases caseExprs;
+    for (auto c : cases) {
+      caseExprs.push_back({c, new ConstantValue(new )});
+    }
+    statements.push_back(new Case(freshValue, in, caseExprs));
     return freshValue;
   }
 

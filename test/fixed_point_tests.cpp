@@ -34,24 +34,14 @@ namespace FuncGen {
     }
   }
 
-  BitVector twos_complement_negate(const BitVector& b) {
-    return add_general_width_bv(~b, BitVector(b.bitLength(), 1));
-  }
-
-  BitVector back_extend(const int total_bits, const BitVector& b) {
-    assert(total_bits >= b.bitLength());
-
-    return shl(zero_extend(total_bits, b), BitVector(32, total_bits - b.bitLength()));
-  }
-
   BitVector approximate(const BitVector& b) {
-    cout << "b.bits = " << b << endl;
+    //cout << "b.bits = " << b << endl;
 
     int width = b.bitLength();
     int approximationWidth = 10;
     BitVector normed = normalize_left(b, 0);
 
-    cout << "normed = " << normed << endl;
+    //cout << "normed = " << normed << endl;
     
     BitVector top_8 =
       zero_extend(b.bitLength(),
@@ -69,19 +59,19 @@ namespace FuncGen {
 
     auto quote = unsigned_divide(one_ext, top_8_ext);
 
-    cout << "one   = " << one_ext << endl;
-    cout << "top   = " << top_8_ext << endl;
-    cout << "quote = " << quote << endl;
+    // cout << "one   = " << one_ext << endl;
+    // cout << "top   = " << top_8_ext << endl;
+    // cout << "quote = " << quote << endl;
 
     quote = slice(normalize_left(quote, 0), quote.bitLength() - width, quote.bitLength());
 
 
     FixedPoint q(0, normalize_left(quote, 0), -15);
-    cout << "Initial approximation = " << q << ", double = " << fixedPointToDouble(q) << endl;
+    //cout << "Initial approximation = " << q << ", double = " << fixedPointToDouble(q) << endl;
     
-    cout << "Actual          1 / D = " << (1 / fixedPointToDouble(FixedPoint(0, b, -15))) << endl;
+    //cout << "Actual          1 / D = " << (1 / fixedPointToDouble(FixedPoint(0, b, -15))) << endl;
 
-    return normalize_left(quote, 0);
+    return quote;
   }
 
   BitVector twos_complement_absolute_value(const BitVector& b) {
@@ -119,7 +109,6 @@ namespace FuncGen {
       BitVector one = BitVector(width, 1 << decimalPlace);
       BitVector X = approximate(D_);
 
-      auto D_ = normalize_left(D, 1);
       for (int i = 0; i < 1; i++) {
         X = add(X, mul_as_fixed_point(X, sub(one, mul_as_fixed_point(D_, X, decimalPlace)), decimalPlace));
       }
