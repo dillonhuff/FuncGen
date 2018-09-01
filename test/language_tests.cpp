@@ -800,8 +800,6 @@ namespace FuncGen {
     auto X = f->freshVal(width);
     f->assign(X, f->constant(width, 1 << (width - 1)));
 
-    // Repeatedly update X using newton-raphson iteration
-    // Repeat X = add(X, fp_mul(X, sub(one, fp_mul(D_, X, decPlace)), decPlace))
     int decPlace = width - 1;
 
     Expression* update =
@@ -830,6 +828,13 @@ namespace FuncGen {
     auto res = f->caseStatement(D_isPowOfTwo, inCases);
 
     f->assign(Q, res);
+
+    // TODO: Negate if output is negative
+    //       Do real table lookup approximation
+
+    // Cleanup: Create ite expression builder
+    //          Move to define_function based system to reduce boilerplate
+    //          Separate expression building from statement building even more
 
     SECTION("8 / 4 == 2") {
       Simulator sim(*f);
