@@ -413,10 +413,11 @@ namespace FuncGen {
     //   return freshValue;
     // }
 
-    Function* getBuiltin(const std::string& name, const int width0, const int width1);
-    Function* getBuiltin(const std::string& name, const int width); // {
-      //      return getContext().getBuiltin(name, width);
-      //    }
+    Function* getBuiltinSlice(const int inWidth,
+                              const int end,
+                              const int start);
+
+    Function* getBuiltin(const std::string& name, const int width);
 
     void assign(Value* a, Value* b) {
       assert(a != nullptr);
@@ -504,18 +505,20 @@ namespace FuncGen {
       return map_find(width, datas);
     }
 
-    Function* getBuiltin(const std::string& name, const int width) const {
-      assert(false);
-    }
+    Function* getBuiltin(const std::string& name, const int width);
 
-    Function* getBuiltin(const std::string& name, const int width0, const int width1) const {
-      assert(false);
-    }
+    Function* getBuiltinSlice(const int inWidth,
+                              const int end,
+                              const int start);
     
     Function* getFunction(const std::string& name) const {
       return map_find(name, functions);
     }
 
+    bool hasFunction(const std::string& name) const {
+      return contains_key(name, functions);
+    }
+    
     Function* newFunction(const std::string& name,
                           const std::map<std::string, Data*>& inputs,
                           const std::map<std::string, Data*>& outputs) {

@@ -225,17 +225,53 @@ namespace FuncGen {
     return getContext().getBuiltin(name, width);
   }
 
-  Function* Function::getBuiltin(const std::string& name, const int width0, const int width1) {
-    return getContext().getBuiltin(name, width0, width1);
+  Function* Function::getBuiltinSlice(const int inWidth,
+                                      const int end,
+                                      const int start) {
+    return getContext().getBuiltinSlice(inWidth, end, start);
   }
   
   Value* Function::slice(const int end, const int start, Value* v) {
     std::string shiftName = "slice_" + std::to_string(end) + "_" + std::to_string(start);
 
     Value* freshValue = makeUniqueValue(end - start + 1);
-    statements.push_back(new Assignment(freshValue, new FunctionCall(getBuiltin("slice", end, start), {{"in", v}})));
+    statements.push_back(new Assignment(freshValue, new FunctionCall(getBuiltinSlice(v->bitWidth(), end, start), {{"in", v}})));
 
     return freshValue;
+  }
+
+  Function* Context::getBuiltin(const std::string& name, const int width) {
+    string fullName = name + "_" + to_string(width);
+    if (hasFunction(fullName)) {
+      return getFunction(fullName);
+    }
+
+    auto newF =
+      newFunction(fullName,
+                  {{"in0", arrayType(width)}, {"in1", arrayType(32)}},
+                  {{"out", arrayType(width)}});
+
+    return newF;
+  }
+  
+
+  Function* Context::getBuiltinSlice(const int inWidth,
+                                     const int end,
+                                     const int start) {
+    assert(end >= start);
+
+    string fullName = "slice_" + to_string(end) + "_" + to_string(start);
+    if (hasFunction(fullName)) {
+      return getFunction(fullName);
+    }
+
+    auto newF =
+      newFunction(fullName,
+                  {{"in", arrayType(inWidth)}},
+                  {{"out", arrayType(end - start + 1)}});
+
+    return newF;
+
   }
   
 }
