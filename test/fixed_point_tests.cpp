@@ -118,7 +118,7 @@ namespace FuncGen {
                              zero_extend(2*width, X));
 
       int resShift = width + (width - shiftDistance - 2);
-      tentativeRes = slice(ashr(longProd,
+      tentativeRes = slice(lshr(longProd,
                                 BitVector(32, resShift)), 0, width);
     }
 

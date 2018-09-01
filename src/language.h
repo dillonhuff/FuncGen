@@ -482,10 +482,6 @@ namespace FuncGen {
                               {{"in", a}});
     }
     
-    Value* addEquals(const Value* a, const Value* b) {
-      return nullptr;
-    }
-
     Value* constant(const int bitWidth, const int value);
     Value* constant(const BitVector& b);
 

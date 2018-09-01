@@ -759,11 +759,6 @@ namespace FuncGen {
 
     SET(absN, f->unop(abs, N));
     SET(absD, f->unop(abs, D));
-    //  auto absN = f->freshVal(width);
-    //auto absD = f->freshVal(width);
-
-    //    f->assign(absN, f->unop(abs, N));
-    //f->assign(absD, f->unop(abs, D));
 
     auto NisNeg = f->slice(width - 1, width - 1, N);
     auto DisNeg = f->slice(width - 1, width - 1, D);
@@ -780,7 +775,7 @@ namespace FuncGen {
 
     auto D_ = f->shiftLeftVariable(absD, shiftDistance); // Barrell shift
 
-    f->printStmt("Got D_");
+    f->printStmt("Got D_ = %b", {D_});
 
     auto oneConst = f->constant(BitVector(width, 1 << (width - 2)));
 
@@ -809,7 +804,7 @@ namespace FuncGen {
     f->printStmt("Got X = %b", {X});
 
     auto longProd = f->freshVal(2*width);
-    f->assign(longProd, f->timesExpr(f->zextExpr(N, 2*width), f->zextExpr(X, 2*width)));
+    f->assign(longProd, f->timesExpr(f->zextExpr(absN, 2*width), f->zextExpr(X, 2*width)));
 
     f->printStmt("Got longProd = %b", {longProd});
 
@@ -827,10 +822,15 @@ namespace FuncGen {
     Cases inCases{{BitVector(1, 0), tentativeRes}, {BitVector(1, 1), shrD}};
     auto res = f->caseStatement(D_isPowOfTwo, inCases);
 
-    f->assign(Q, res);
+    auto signsMatch = f->equals(DisNeg, NisNeg);
+    Cases negCases{{BitVector(1, 0), f->unop(tcNegW, res)}, {BitVector(1, 1), res}};
+    auto finalRes = f->caseStatement(signsMatch, negCases);
+    
+    f->assign(Q, finalRes);
 
     // TODO: Negate if output is negative
     //       Do real table lookup approximation
+    //       Synthesize verilog from this data structure
 
     // Cleanup: Create ite expression builder
     //          Move to define_function based system to reduce boilerplate
@@ -854,6 +854,24 @@ namespace FuncGen {
       REQUIRE(sim.getOutput("Q") == BitVector(16, 8 / 3));
     }
 
+    SECTION("-8 / 3 == -2") {
+      Simulator sim(*f);
+      sim.setInput("N", BitVector(16, -8));
+      sim.setInput("D", BitVector(16, 3));
+      sim.evaluate();
+
+      REQUIRE(sim.getOutput("Q") == BitVector(16, -(8 / 3)));
+    }
+
+    SECTION("8 / -3 == -2") {
+      Simulator sim(*f);
+      sim.setInput("N", BitVector(16, 8));
+      sim.setInput("D", BitVector(16, -3));
+      sim.evaluate();
+
+      REQUIRE(sim.getOutput("Q") == BitVector(16, 8 / -3));
+    }
+    
   }
 
   // TEST_CASE("8 bit newton raphson experiment") {
