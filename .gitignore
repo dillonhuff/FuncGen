@@ -5,3 +5,5 @@ all-tests
 Makefile
 CMakeFiles/
 CMakeCache.txt
+newton_raphson_divide_16.v
+obj_dir/

@@ -3,6 +3,7 @@
 #include "fixed_point.h"
 #include "language.h"
 #include "simulator.h"
+#include "synthesis.h"
 
 using namespace std;
 
@@ -39,7 +40,35 @@ namespace FuncGen {
   // set that if's true condition to be the active statement block
   // add statement SET(a, b) to active block
   // add statement SET(a, b + 1) to active block
-  // 
+  //
+
+  bool runCmd(const std::string& cmd) {
+    bool res = system(cmd.c_str());
+    return res == 0;
+  }
+
+  bool runVerilatorTB(const std::string& moduleName) {
+
+    string mainName = moduleName + "_tb.cpp";
+
+    string genCmd = "verilator -Wall -Wno-DECLFILENAME --cc " + moduleName + ".v --exe " + mainName + " --top-module " + moduleName + " -CFLAGS -std=c++14";
+    
+bool genVerilator = runCmd(genCmd);
+    if (!genVerilator) {
+      return false;
+    }
+
+    string makeCmd = "make -C obj_dir -j -f V" + moduleName + ".mk V" + moduleName;
+    bool makeTb = runCmd(makeCmd);
+    if (!makeTb) {
+      return false;
+    }
+
+    string exeCmd = "./obj_dir/V" + moduleName;
+    bool runTb = runCmd(exeCmd);
+
+    return runTb;
+  }
 
   TEST_CASE("Zero extend") {
     
@@ -799,7 +828,7 @@ namespace FuncGen {
 
     Expression* update =
       f->plusExpr(X, f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace));
-    f->repeat(10, f->assignStmt(X, update));
+    f->repeat(4, f->assignStmt(X, update));
 
     f->printStmt("Got X = %b", {X});
 
@@ -875,7 +904,7 @@ namespace FuncGen {
     SECTION("Randomized testing") {
       
       for (int i = 0; i < 100; i++) {
-        cout << "Rand i = " << i << endl;
+        //cout << "Rand i = " << i << endl;
         int Ni = iRand(-1000, 1000);
         int Di = iRand(-100, 100);
 
@@ -885,98 +914,31 @@ namespace FuncGen {
         BitVector N(16, Ni);
         BitVector D(16, Di);
 
-        cout << "N = " << N << endl;
-        cout << "D = " << D << endl;
+        // cout << "N = " << N << endl;
+        // cout << "D = " << D << endl;
 
         Simulator sim(*f);
         sim.setInput("N", N);
         sim.setInput("D", D);
         sim.evaluate();
         auto quot = sim.getOutput("Q");
-        cout << "Quotient         = " << quot << endl;
+        //cout << "Quotient         = " << quot << endl;
 
         REQUIRE(quot == BitVector(16, Ni / Di));
       }
     }
+
+    SECTION("Synthesizing the newton-raphson divide function") {
+
+      SECTION("Combinational synthesis") {
+        SynthesisConstraints constraints;
+        constraints.setMaxCycles(0);
+
+        synthesizeVerilog(f, constraints);
+
+        REQUIRE(runVerilatorTB(f->getName()));
+      }
+    }
     
   }
-
-  // TEST_CASE("8 bit newton raphson experiment") {
-
-  //   FixedPoint f10{BitVector(8, 10), 0};
-  //   FixedPoint f3{BitVector(8, 3), 0};
-
-  //   FixedPoint f48{BitVector(8, 48), 0};
-  //   FixedPoint f17{BitVector(8, 17), 0};
-
-  //   auto quot = divide(f48, f17);
-  //   cout << "48 / 17 = " << divide(f48, f17) << endl;
-  //   cout << "quot*17 = " << fixedPointToDouble(quot)*17 << endl;
-
-  //   FixedPoint c0 = rightTruncate(quot.bitLength() / 2, leftExtend(quot));
-  //   cout << "left extended quotient = " << c0 << endl;
-
-  //   FixedPoint f32{BitVector(8, 32), 0};
-  //   auto c1 = rightTruncate(quot.bitLength() / 2, leftExtend(divide(f32, f17)));
-  //   cout << "left extended quotient = " << c1 << endl;
-
-  //   auto D = f3;
-  //   auto X = subtract(c0, rightTruncate(quot.bitLength(), leftExtend(multiply(c1, D))));
-
-  //   cout << "X = " << X << endl;
-    
-  //   assert(false);
-  // }
-
-  // TEST_CASE("16 bit newton-raphson division") {
-  //   int width = 16;
-  //   Context c;
-  //   Function* f = c.newFunction("newton_raphson_div_16",
-  //                               {{"N", c.arrayType(width)},
-  //                                   {"D", c.arrayType(width)}},
-  //                               {{"quotient", c.arrayType(width)}});
-
-  //   int numIterations = ceil(log2((width + 1) / log2(17)));
-  //   cout << "Number of iterations = " << numIterations << endl;
-
-  //   auto c1 = f->unsignedDivide(f->constant(width, 48),
-  //                               f->constant(width, 17));
-  //   auto c2 = f->unsignedDivide(f->constant(width, 32),
-  //                               f->constant(width, 17));
-
-  //   BitVector bv(width, 32);
-  //   BitVector bv0(width, 17);
-
-  //   cout << "32 = " << bv << endl;
-  //   cout << "17 = " << bv0 << endl;
-  //   auto quot = unsigned_divide(shl(bv, BitVector(32, 10)), bv0);
-  //   double approx = approximateFixedPoint(quot, 10);
-  //   cout << "Quotient c2 = " << quot << ", fixed point = " << approx << ", bv0*approx = " << bv0.to_type<int>()*approx << endl;
-
-  //   assert(false);
-    
-  //   auto x = f->zeroExtend(2*width,
-  //                          f->subtract(c1, f->multiply(c2, f->getValue("D"))));
-
-  //   auto dext = f->zeroExtend(2*width, f->getValue("D"));
-
-  //   f->repeat(numIterations,
-  //             f->assignStmt(x,
-  //                           f->plusExpr(x,
-  //                                       f->timesExpr(x,
-  //                                                    f->subExpr(f->constant(2*width, 1),
-  //                                                               f->timesExpr(dext,
-  //                                                                            x))))));
-
-    
-  //   auto res = f->multiply(f->getValue("N"), x);
-  //   f->assign(f->getValue("quotient"), res);
-
-  //   Simulator sim(*f);
-  //   sim.setInput("N", BitVector(width, 10));
-  //   sim.setInput("D", BitVector(width, 4));
-  //   sim.evaluate();
-
-  //   REQUIRE(sim.getOutput("quotient") == BitVector(width, 10 / 4));
-  // }
 }

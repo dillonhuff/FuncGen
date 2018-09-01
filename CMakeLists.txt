@@ -13,6 +13,7 @@ INCLUDE_DIRECTORIES(./src/)
 
 SET(CPP_FILES ./src/language.cpp
               ./src/fixed_point.cpp
+              ./src/synthesis.cpp
               ./src/simulator.cpp)
 
 add_library(funcgen ${CPP_FILES})
