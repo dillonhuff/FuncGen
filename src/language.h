@@ -449,12 +449,12 @@ namespace FuncGen {
     }
 
     Expression* subExpr(Value* a, Value* b) {
-      return new FunctionCall("subtract_" + std::to_string(a->bitWidth()),
+      return new FunctionCall(getBuiltin("subtract", a->bitWidth()),
                               {{"in0", a}, {"in1", b}});
     }
     
     Expression* timesExpr(Value* a, Value* b) {
-      return new FunctionCall("multiply_" + std::to_string(a->bitWidth()),
+      return new FunctionCall(getBuiltin("multiply", a->bitWidth()),
                               {{"in0", a}, {"in1", b}});
     }
     

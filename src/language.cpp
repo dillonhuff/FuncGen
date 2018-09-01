@@ -158,7 +158,7 @@ namespace FuncGen {
 
     //std::string divideName = "multiply_" + std:
     Value* freshValue = makeUniqueValue(a->bitWidth());
-    statements.push_back(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("multiply", a->getBitWidth()), {{"in0", a}, {"in1", b}})));
+    statements.push_back(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("multiply", a->bitWidth()), {{"in0", a}, {"in1", b}})));
     return freshValue;
   }
 
@@ -229,7 +229,7 @@ namespace FuncGen {
     return getContext().getBuiltin(name, width0, width1);
   }
   
-  Value* slice(const int end, const int start, Value* v) {
+  Value* Function::slice(const int end, const int start, Value* v) {
     std::string shiftName = "slice_" + std::to_string(end) + "_" + std::to_string(start);
 
     Value* freshValue = makeUniqueValue(end - start + 1);
