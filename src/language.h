@@ -434,8 +434,20 @@ namespace FuncGen {
     //   return freshValue;
     // }
 
+  Value* sliceExpr(const int end, const int start, Value* v) {
+    return new FunctionCall(getBuiltinSlice(v->bitWidth(), end, start), {{"in", v}});
+  }
+    
     Expression* fpMul(Value* a, Value* b, const int decimalPlace) {
-      assert(false);
+      assert(a->bitWidth() == b->bitWidth());
+
+      Expression* aBitsExt = zextExpr(a, 2*a->bitWidth());
+      Expression* bBitsExt = zextExpr(b, 2*b->bitWidth());
+
+      Expression* prodBits = timesExpr(aBitsExt, bBitsExt);
+      Expression* res = sliceExpr(a->bitWidth(), 0, lshrExpr(prodBits, decimalPlace));
+
+      return res;
     }
 
     Expression* plusExpr(Value* a, Value* b) {
@@ -451,6 +463,16 @@ namespace FuncGen {
     Expression* timesExpr(Value* a, Value* b) {
       return new FunctionCall(getBuiltin("multiply", a->bitWidth()),
                               {{"in0", a}, {"in1", b}});
+    }
+
+    Expression* zextExpr(Value* a, int width) {
+      return new FunctionCall(getBuiltin("zero_extend_" + std::to_string(width), width),
+                              {{"in", a}});
+    }
+
+    Expression* lshrExpr(Value* a, int width) {
+      return new FunctionCall(getBuiltin("logical_shift_right_" + std::to_string(width), a->bitWidth()),
+                              {{"in", a}});
     }
     
     Value* addEquals(const Value* a, const Value* b) {

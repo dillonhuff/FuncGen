@@ -794,6 +794,8 @@ namespace FuncGen {
 
     // Otherwise compute the NR update
 
+    f->printStmt("Computing X");
+
     auto one = f->constant(width, 1 << (width - 1));
     auto X = f->freshVal(width);
     f->assign(X, f->constant(width, 1 << (width - 1)));
@@ -806,15 +808,25 @@ namespace FuncGen {
       f->plusExpr(X, f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace));
     f->repeat(10, f->assignStmt(X, update));
 
+    f->printStmt("Got X");    
+
+    auto longProd = f->freshVal(2*width);
+    f->assign(longProd, f->timesExpr(f->zextExpr(N, 2*width), f->zextExpr(X, 2*width)));
+
+    f->printStmt("Got longProd");
+
     // Compute tentativ res using multiplication
-    // int resShift = width + (width - shiftDistance.to_type<int>() - 2);
-    // auto a0 = f->arithmeticShiftRight(resShift, longProd);
+    auto wConst = f->constant(width, width);
+    auto twoConst = f->constant(width, 2);
+    SET(resShift, f->plusExpr(wConst, f->subExpr(f->subExpr(wConst, shiftDistance), twoConst)));
+        
+    auto a0 = f->logicalShiftRightVariable(longProd, resShift);
 
     // TODO: Set this to be the product
     auto tentativeRes = f->freshVal(width);
-    f->assign(tentativeRes, X);
+    f->assign(tentativeRes, f->sliceExpr(width - 1, 0, a0));
     
-    Cases inCases{{BitVector(1, 0), X}, {BitVector(1, 1), shrD}};
+    Cases inCases{{BitVector(1, 0), tentativeRes}, {BitVector(1, 1), shrD}};
     auto res = f->caseStatement(D_isPowOfTwo, inCases);
 
     f->assign(Q, res);
