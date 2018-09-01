@@ -798,14 +798,23 @@ namespace FuncGen {
     auto X = f->freshVal(width);
     f->assign(X, f->constant(width, 1 << (width - 1)));
 
-    // int resShift = width + (width - shiftDistance - 2);
+    // Repeatedly update X using newton-raphson iteration
+    // Repeat X = add(X, fp_mul(X, sub(one, fp_mul(D_, X, decPlace)), decPlace))
+    int decPlace = width - 1;
+
+    Expression* update =
+      f->plusExpr(X, f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace));
+    f->repeat(10, f->assignStmt(X, update));
+
+    // Compute tentativ res using multiplication
+    // int resShift = width + (width - shiftDistance.to_type<int>() - 2);
     // auto a0 = f->arithmeticShiftRight(resShift, longProd);
 
     // TODO: Set this to be the product
     auto tentativeRes = f->freshVal(width);
     f->assign(tentativeRes, X);
     
-    Cases inCases{{BitVector(1, 0), tentativeRes}, {BitVector(1, 1), shrD}};
+    Cases inCases{{BitVector(1, 0), X}, {BitVector(1, 1), shrD}};
     auto res = f->caseStatement(D_isPowOfTwo, inCases);
 
     f->assign(Q, res);
@@ -819,14 +828,14 @@ namespace FuncGen {
       REQUIRE(sim.getOutput("Q") == BitVector(16, 8 / 4));
     }
 
-    // SECTION("8 / 3 == 2") {
-    //   Simulator sim(*f);
-    //   sim.setInput("N", BitVector(16, 8));
-    //   sim.setInput("D", BitVector(16, 3));
-    //   sim.evaluate();
+    SECTION("8 / 3 == 2") {
+      Simulator sim(*f);
+      sim.setInput("N", BitVector(16, 8));
+      sim.setInput("D", BitVector(16, 3));
+      sim.evaluate();
 
-    //   REQUIRE(sim.getOutput("Q") == BitVector(16, 8 / 3));
-    // }
+      REQUIRE(sim.getOutput("Q") == BitVector(16, 8 / 3));
+    }
 
   }
 

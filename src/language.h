@@ -434,6 +434,10 @@ namespace FuncGen {
     //   return freshValue;
     // }
 
+    Expression* fpMul(Value* a, Value* b, const int decimalPlace) {
+      assert(false);
+    }
+
     Expression* plusExpr(Value* a, Value* b) {
       return new FunctionCall(getBuiltin("add",a->bitWidth()),
                               {{"in0", a}, {"in1", b}});
