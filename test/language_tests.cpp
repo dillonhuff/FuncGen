@@ -725,6 +725,14 @@ namespace FuncGen {
     f->assign(absN, f->unop(abs, N));
     f->assign(absD, f->unop(abs, D));
 
+    auto NisNeg = f->slice(width - 1, width - 1, N);
+    auto DisNeg = f->slice(width - 1, width - 1, D);
+
+    auto DleadingZeros = f->leadZeroCount(absD); // Priority encoder
+    auto D_ = f->shiftLeftVariable(DleadingZeros, D); // Barrell shift
+    
+
+    
     SECTION("8 / 4 == 2") {
       Simulator sim(*f);
       sim.setInput("N", BitVector(16, 8));
