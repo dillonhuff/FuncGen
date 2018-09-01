@@ -329,89 +329,14 @@ namespace FuncGen {
       return makeUniqueValue(width);
     }
 
-    Value* unsignedDivide(Value* a, Value* b);// {
-    //   assert(a != nullptr);
-    //   assert(b != nullptr);
-
-    //   assert(sameWidth(*a, *b));
-
-    //   std::string divideName = "unsigned_divide_" + std::to_string(a->bitWidth());
-    //   Value* freshValue = makeUniqueValue(a->bitWidth());
-    //   statements.push_back(new Assignment(freshValue,
-    //                                       new FunctionCall(getContext().getBuiltin("unsigned_divide", a->bitWidth()), {{"in0", a}, {"in1", b}})));
-    //   return freshValue;
-    // }
-
-    Value* multiply(Value* a, Value* b); // {
-    //   assert(a != nullptr);
-    //   assert(b != nullptr);
-
-    //   assert(sameWidth(*a, *b));
-
-    //   std::string divideName = "multiply_" + std::to_string(a->bitWidth());
-    //   Value* freshValue = makeUniqueValue(a->bitWidth());
-    //   statements.push_back(new Assignment(freshValue, new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
-    //   return freshValue;
-    // }
-
-    Value* subtract(Value* a, Value* b); // {
-    //   assert(a != nullptr);
-    //   assert(b != nullptr);
-
-    //   assert(sameWidth(*a, *b));
-
-    //   std::string divideName = "subtract_" + std::to_string(a->bitWidth());
-    //   Value* freshValue = makeUniqueValue(a->bitWidth());
-    //   statements.push_back(new Assignment(freshValue, new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
-    //   return freshValue;
-    // }
-
-    Value* add(Value* a, Value* b); //{
-    //   assert(a != nullptr);
-    //   assert(b != nullptr);
-
-    //   assert(sameWidth(*a, *b));
-
-    //   std::string divideName = "add_" + std::to_string(a->bitWidth());
-    //   Value* freshValue = makeUniqueValue(a->bitWidth());
-    //   statements.push_back(new Assignment(freshValue, new FunctionCall(divideName, {{"in0", a}, {"in1", b}})));
-    //   return freshValue;
-    // }
-    
-    Value* zeroExtend(const int resWidth, Value* v); // {
-    //   std::string zextName = "zero_extend_" + std::to_string(resWidth);
-
-    //   Value* freshValue = makeUniqueValue(resWidth);
-    //   statements.push_back(new Assignment(freshValue, new FunctionCall(zextName, {{"in", v}})));
-    //   return freshValue;
-    // }
-
-    Value* shiftLeft(const int shiftValue, Value* v); // {
-    //   std::string shiftName = "shift_left_" + std::to_string(shiftValue);
-
-    //   Value* freshValue = makeUniqueValue(v->bitWidth());
-    //   statements.push_back(new Assignment(freshValue, new FunctionCall(shiftName, {{"in", v}})));
-
-    //   return freshValue;
-    // }
-
-    Value* logicalShiftRight(const int shiftValue, Value* v); //{
-    //   std::string shiftName = "logical_shift_right_" + std::to_string(shiftValue);
-
-    //   Value* freshValue = makeUniqueValue(v->bitWidth());
-    //   statements.push_back(new Assignment(freshValue, new FunctionCall(shiftName, {{"in", v}})));
-
-    //   return freshValue;
-    // }
-
-    Value* invert(Value* v); //{
-    //   std::string invName = "invert_" + std::to_string(v->bitWidth());
-
-    //   Value* freshValue = makeUniqueValue(v->bitWidth());
-    //   statements.push_back(new Assignment(freshValue, new FunctionCall(invName, {{"in", v}})));
-
-    //   return freshValue;
-    // }
+    Value* unsignedDivide(Value* a, Value* b);
+    Value* multiply(Value* a, Value* b);
+    Value* subtract(Value* a, Value* b);
+    Value* add(Value* a, Value* b);
+    Value* zeroExtend(const int resWidth, Value* v);
+    Value* shiftLeft(const int shiftValue, Value* v);
+    Value* logicalShiftRight(const int shiftValue, Value* v);
+    Value* invert(Value* v);
 
     Function* getBuiltinSlice(const int inWidth,
                               const int end,
