@@ -871,6 +871,33 @@ namespace FuncGen {
 
       REQUIRE(sim.getOutput("Q") == BitVector(16, 8 / -3));
     }
+
+    SECTION("Randomized testing") {
+      
+      for (int i = 0; i < 100; i++) {
+        cout << "Rand i = " << i << endl;
+        int Ni = iRand(-1000, 1000);
+        int Di = iRand(-100, 100);
+
+        cout << "Ni = " << Ni << endl;
+        cout << "Di = " << Di << endl;
+
+        BitVector N(16, Ni);
+        BitVector D(16, Di);
+
+        cout << "N = " << N << endl;
+        cout << "D = " << D << endl;
+
+        Simulator sim(*f);
+        sim.setInput("N", N);
+        sim.setInput("D", D);
+        sim.evaluate();
+        auto quot = sim.getOutput("Q");
+        cout << "Quotient         = " << quot << endl;
+
+        REQUIRE(quot == BitVector(16, Ni / Di));
+      }
+    }
     
   }
 
