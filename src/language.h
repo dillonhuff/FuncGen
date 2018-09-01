@@ -111,6 +111,7 @@ namespace FuncGen {
     STATEMENT_TYPE_RETURN,
     STATEMENT_TYPE_ASSIGNMENT,
     STATEMENT_TYPE_REPEAT,
+    STATEMENT_TYPE_PRINT,
   };
 
   class Statement {
@@ -125,6 +126,27 @@ namespace FuncGen {
     virtual ~Statement() {}
   };
 
+  class PrintStatement : public Statement {
+    std::string text;
+
+  public:
+
+    PrintStatement(const std::string& text_) : text(text_) {}
+
+    std::string toString(const int indentLevel) const {
+      return tab(indentLevel) + "\"" + text + "\"";
+    }
+
+    std::string getText() const {
+      return text;
+    }
+
+    virtual StatementType type() const {
+      return STATEMENT_TYPE_PRINT;
+    }
+
+  };
+  
   class Case : public Statement {
     Value* result;
     Value* in;
@@ -339,7 +361,9 @@ namespace FuncGen {
     Value* invert(Value* v);
     Value* leadZeroCount(Value* v);
     Value* shiftLeftVariable(Value* v, Value* shiftAmount);
+    Value* logicalShiftRightVariable(Value* v, Value* shiftAmount);
     Value* equals(Value* a, Value* b);
+    void printStmt(const std::string& str);
 
     Function* getBuiltinSlice(const int inWidth,
                               const int end,

@@ -718,6 +718,7 @@ namespace FuncGen {
 
     auto N = f->getValue("N");
     auto D = f->getValue("D");
+    auto Q = f->getValue("Q");
     
     auto absN = f->freshVal(width);
     auto absD = f->freshVal(width);
@@ -728,11 +729,34 @@ namespace FuncGen {
     auto NisNeg = f->slice(width - 1, width - 1, N);
     auto DisNeg = f->slice(width - 1, width - 1, D);
 
+    f->printStmt("Computed negatives in newton divide");
+
     auto DleadingZeros = f->leadZeroCount(absD); // Priority encoder
-    auto D_ = f->shiftLeftVariable(D, DleadingZeros); // Barrell shift
+
+    f->printStmt("Counted leading zeros");
+
+    auto shiftDistance = f->subtract(DleadingZeros, f->constant(width, 1));
+
+    f->printStmt("Computed shift distance");    
+
+    auto D_ = f->shiftLeftVariable(absD, shiftDistance); // Barrell shift
+
+    f->printStmt("Got D_");
+
     auto oneConst = f->constant(BitVector(width, 1 << (width - 2)));
 
     auto D_isPowOfTwo = f->equals(D_, oneConst);
+
+    f->printStmt("Checked if d is a power of 2 in newton divide");    
+
+    auto shiftDiv0 = f->subtract(f->constant(width, width), shiftDistance);
+    auto shiftDiv = f->subtract(shiftDiv0, f->constant(width, 2));
+    auto shrD = f->logicalShiftRightVariable(absN, shiftDiv);
+
+    Cases inCases{{BitVector(1, 0), shrD}, {BitVector(1, 1), shrD}};
+    auto res = f->caseStatement(D_isPowOfTwo, inCases);
+
+    f->assign(Q, res);
 
     SECTION("8 / 4 == 2") {
       Simulator sim(*f);

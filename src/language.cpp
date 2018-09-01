@@ -241,22 +241,49 @@ namespace FuncGen {
   }
 
   Value* Function::leadZeroCount(Value* v) {
-    assert(false);
-    // string countName = "count_leading_zeros";
-    // Value* freshValue = makeUniqueValue(clog2(v->bitWidth()));
-    // auto call =
-    //   new FunctionCall(getBuiltinZeroCount(countName, v->bitWidth()), {{"in", v}});
-    // statements.push_back(new Assignment(freshValue, call);
+    string countName = "count_leading_zeros";
+    Value* freshValue = makeUniqueValue(v->bitWidth());
+    auto call =
+      new FunctionCall(getBuiltin(countName, v->bitWidth()), {{"in", v}});
+    statements.push_back(new Assignment(freshValue, call));
 
-    // return freshValue;
+    return freshValue;
   }
 
   Value* Function::shiftLeftVariable(Value* v, Value* shiftAmount) {
-    assert(false);
+    assert(v != nullptr);
+    assert(shiftAmount != nullptr);
+
+    Value* freshValue = makeUniqueValue(v->bitWidth());
+    statements.push_back(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("shift_left_variable", v->bitWidth()), {{"in0", v}, {"in1", shiftAmount}})));
+
+    return freshValue;
+
   }
 
+  Value* Function::logicalShiftRightVariable(Value* v, Value* shiftAmount) {
+    assert(v != nullptr);
+    assert(shiftAmount != nullptr);
+
+    Value* freshValue = makeUniqueValue(v->bitWidth());
+    statements.push_back(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("logical_shift_right_variable", v->bitWidth()), {{"in0", v}, {"in1", shiftAmount}})));
+
+    return freshValue;
+  }
+
+  void Function::printStmt(const std::string& str) {
+    statements.push_back(new PrintStatement(str));
+  }
+  
   Value* Function::equals(Value* a, Value* b) {
-    assert(false);
+    assert(a != nullptr);
+    assert(b != nullptr);
+
+    assert(sameWidth(*a, *b));
+
+    Value* freshValue = makeUniqueValue(1);
+    statements.push_back(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("equals", a->bitWidth()), {{"in0", a}, {"in1", b}})));
+    return freshValue;
   }
 
   Function* Context::getBuiltin(const std::string& name, const int width) {

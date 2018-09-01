@@ -1,6 +1,7 @@
 #pragma once
 
 #include "language.h"
+#include "fixed_point.h"
 
 using namespace std;
 
@@ -69,7 +70,9 @@ namespace FuncGen {
     }
 
     void setInput(const std::string& inputName, const BitVector& value) {
+      cout << "Setting input " << inputName << endl;
       variableValues[map_find(inputName, variableNames)] = value;
+      cout << "Done" << endl;
     }
 
     void setValue(Value* v, const BitVector& value) {
@@ -87,31 +90,45 @@ namespace FuncGen {
       std::string name = call.functionName();
       if (isZext(name)) {
         Value* a = call.getInput("in");
-        //Value* res = call.getResult();
 
         std::string ss = "zero_extend_";
         int width = stoi(name.substr(ss.size()));
         return zero_extend(width, evaluateExpression(a));
 
-        //setValue(res, zero_extend(res->bitWidth(), getValue(a)));
       } else if (isUnsignedDivide(name)) {
         Value* toDivide = call.getInput("in0");
         Value* divisor = call.getInput("in1");
 
-        //Value* res = call.getResult();
-
         return unsigned_divide(evaluateExpression(toDivide), evaluateExpression(divisor));
-        //setValue(res, unsigned_divide(getValue(toDivide), getValue(divisor)));
+      } else if (hasPrefix(name, "logical_shift_right_variable")) {
+
+        Value* toShift = call.getInput("in0");
+        Value* shiftAmount = call.getInput("in1");
+
+        return lshr(evaluateExpression(toShift), evaluateExpression(shiftAmount));
+
+      } else if (hasPrefix(name, "shift_left_variable")) {
+        cout << "Shift left variable" << endl;
+        Value* toShift = call.getInput("in0");
+        Value* shiftAmount = call.getInput("in1");
+        return shl(evaluateExpression(toShift), evaluateExpression(shiftAmount));
+        
       } else if (isShiftLeft(name)) {
         std::string pre = "shift_left_";
         int shiftAmount = stoi(name.substr(pre.size()));
 
         Value* toShift = call.getInput("in");
 
-        //Value* res = call.getResult();
 
         return shl(evaluateExpression(toShift), BitVector(32, shiftAmount));
-        //setValue(res, shl(getValue(toShift), BitVector(32, shiftAmount)));
+
+      } else if (hasPrefix(name, "equals")) {
+
+        Value* a = call.getInput("in0");
+        Value* b = call.getInput("in1");
+
+        return BitVector(1, evaluateExpression(a) == evaluateExpression(b));
+        
       } else if (hasPrefix(name, "multiply_")) {
         Value* toDivide = call.getInput("in0");
         Value* divisor = call.getInput("in1");
@@ -165,8 +182,15 @@ namespace FuncGen {
         Value* in1 = call.getInput("in1");
 
         return sub_general_width_bv(evaluateExpression(in0), evaluateExpression(in1));
+      } else if (hasPrefix(name, "count_leading_zeros")) {
+        Value* in = call.getInput("in");
+
+        return BitVector(in->bitWidth(), num_leading_zeros(evaluateExpression(in)));
       } else {
         Function* toCall = f.getContext().getFunction(name);
+
+        cout << "Calling " << toCall->getName() << endl;
+        assert(toCall->getStatements().size() > 0);
 
         Simulator s(*toCall);
         for (auto input : call.getInputs()) {
@@ -218,6 +242,9 @@ namespace FuncGen {
         for (int i = 0; i < assign.numIterations(); i++) {
           evaluateStatement(*(assign.body()));
         }
+      } else if (stmt.type() == STATEMENT_TYPE_PRINT) {
+        const PrintStatement& printStmt = static_cast<const PrintStatement&>(stmt);
+        cout << printStmt.getText() << endl;
       } else {
         assert(stmt.type() == STATEMENT_TYPE_ASSIGNMENT);
         const Assignment& assign = static_cast<const Assignment&>(stmt);
