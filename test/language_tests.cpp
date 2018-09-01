@@ -708,6 +708,9 @@ namespace FuncGen {
     return f;
   }
 
+
+#define SET(a, b) auto a = f->freshVal(b->bitWidth()); f->assign(a, b);
+
   TEST_CASE("16 bit Newton Raphson") {
     int width = 16;
 
@@ -754,11 +757,13 @@ namespace FuncGen {
     auto D = f->getValue("D");
     auto Q = f->getValue("Q");
 
-    auto absN = f->freshVal(width);
-    auto absD = f->freshVal(width);
+    SET(absN, f->unop(abs, N));
+    SET(absD, f->unop(abs, D));
+    //  auto absN = f->freshVal(width);
+    //auto absD = f->freshVal(width);
 
-    f->assign(absN, f->unop(abs, N));
-    f->assign(absD, f->unop(abs, D));
+    //    f->assign(absN, f->unop(abs, N));
+    //f->assign(absD, f->unop(abs, D));
 
     auto NisNeg = f->slice(width - 1, width - 1, N);
     auto DisNeg = f->slice(width - 1, width - 1, D);
