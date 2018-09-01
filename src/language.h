@@ -444,7 +444,7 @@ namespace FuncGen {
     // }
 
     Expression* plusExpr(Value* a, Value* b) {
-      return new FunctionCall("add_" + std::to_string(a->bitWidth()),
+      return new FunctionCall(getBuiltin("add",a->bitWidth()),
                               {{"in0", a}, {"in1", b}});
     }
 
