@@ -139,6 +139,10 @@ namespace FuncGen {
       return stmts;
     }
 
+    void addStmt(Statement* stmt) {
+      stmts.push_back(stmt);
+    }
+
     ~BlockStatement() {
       for (auto stmt : stmts) {
         delete stmt;
@@ -418,14 +422,14 @@ namespace FuncGen {
 
       cout << "Assigning" << endl;
 
-      statements.push_back(new Assignment(a, b));
+      stmt->addStmt(new Assignment(a, b));
     }
     
     Value* slice(const int end, const int start, Value* v); // {
     //   std::string shiftName = "slice_" + std::to_string(end) + "_" + std::to_string(start);
 
     //   Value* freshValue = makeUniqueValue(end - start + 1);
-    //   statements.push_back(new Assignment(freshValue, new FunctionCall(shiftName, {{"in", v}})));
+    //   stmt.addStmt(new Assignment(freshValue, new FunctionCall(shiftName, {{"in", v}})));
 
     //   return freshValue;
     // }
@@ -453,11 +457,11 @@ namespace FuncGen {
     Value* constant(const BitVector& b);
 
     void repeat(const int numIterations, Statement* e) {
-      statements.push_back(new RepeatStmt(numIterations, e));
+      stmt->addStmt(new RepeatStmt(numIterations, e));
     }
 
     void setReturn(const std::string& returnName, const Value* value) {
-      statements.push_back(new ReturnStmt());
+      stmt->addStmt(new ReturnStmt());
     }
 
     ~Function() {
