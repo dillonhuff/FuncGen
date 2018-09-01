@@ -135,6 +135,10 @@ namespace FuncGen {
 
     BlockStatement(const std::vector<Statement*>& stmts_) : stmts(stmts_) {}
 
+    std::vector<Statement*> getStatements() const {
+      return stmts;
+    }
+
     ~BlockStatement() {
       for (auto stmt : stmts) {
         delete stmt;
