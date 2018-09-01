@@ -173,5 +173,69 @@ namespace FuncGen {
     statements.push_back(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("subtract", a->bitWidth()), {{"in0", a}, {"in1", b}})));
     return freshValue;
   }
+
+  Value* Function::add(Value* a, Value* b) {
+      assert(a != nullptr);
+      assert(b != nullptr);
+
+      assert(sameWidth(*a, *b));
+
+      std::string divideName = "add_" + std::to_string(a->bitWidth());
+      Value* freshValue = makeUniqueValue(a->bitWidth());
+      statements.push_back(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("add", a->bitWidth()), {{"in0", a}, {"in1", b}})));
+      return freshValue;
+    }
+
+  Value* Function::zeroExtend(const int resWidth, Value* v) {
+    //std::string zextName = "zero_extend_" + std::to_string(resWidth);
+
+      Value* freshValue = makeUniqueValue(resWidth);
+      statements.push_back(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("zero_extend", resWidth), {{"in", v}})));
+      return freshValue;
+    }
+
+  Value* Function::shiftLeft(const int shiftValue, Value* v) {
+    std::string shiftName = "shift_left_" + std::to_string(shiftValue);
+
+    Value* freshValue = makeUniqueValue(v->bitWidth());
+    statements.push_back(new Assignment(freshValue, new FunctionCall(getBuiltin("shift_left", shiftValue), {{"in", v}})));
+
+    return freshValue;
+  }
+
+  Value* Function::logicalShiftRight(const int shiftValue, Value* v) {
+    std::string shiftName = "logical_shift_right_" + std::to_string(shiftValue);
+
+    Value* freshValue = makeUniqueValue(v->bitWidth());
+    statements.push_back(new Assignment(freshValue, new FunctionCall(getBuiltin("logical_shift_right", shiftValue), {{"in", v}})));
+
+    return freshValue;
+  }
+
+  Value* Function::invert(Value* v) {
+    std::string invName = "invert_" + std::to_string(v->bitWidth());
+
+    Value* freshValue = makeUniqueValue(v->bitWidth());
+    statements.push_back(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("invert", v->bitWidth()), {{"in", v}})));
+
+    return freshValue;
+  }
+
+  Function* Function::getBuiltin(const std::string& name, const int width) {
+    return getContext().getBuiltin(name, width);
+  }
+
+  Function* Function::getBuiltin(const std::string& name, const int width0, const int width1) {
+    return getContext().getBuiltin(name, width0, width1);
+  }
+  
+  Value* slice(const int end, const int start, Value* v) {
+    std::string shiftName = "slice_" + std::to_string(end) + "_" + std::to_string(start);
+
+    Value* freshValue = makeUniqueValue(end - start + 1);
+    statements.push_back(new Assignment(freshValue, new FunctionCall(getBuiltin("slice", end, start), {{"in", v}})));
+
+    return freshValue;
+  }
   
 }
