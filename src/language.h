@@ -112,6 +112,7 @@ namespace FuncGen {
     STATEMENT_TYPE_ASSIGNMENT,
     STATEMENT_TYPE_REPEAT,
     STATEMENT_TYPE_PRINT,
+    STATEMENT_TYPE_BLOCK,
   };
 
   class Statement {
@@ -126,6 +127,35 @@ namespace FuncGen {
     virtual ~Statement() {}
   };
 
+  class BlockStatement : Statement {
+
+    std::vector<Statement*> stmts;
+    
+  public:
+
+    BlockStatement(const std::vector<Statement*>& stmts_) : stmts(stmts_) {}
+
+    ~BlockStatement() {
+      for (auto stmt : stmts) {
+        delete stmt;
+      }
+    }
+
+    std::string toString(const int indentLevel) const {
+      string str = tab(indentLevel) + "{";
+      for (auto stmt : stmts) {
+        str += stmt->toString(indentLevel + 1);
+      }
+      str += tab(indentLevel) + "}";
+      return str;
+    }
+
+    virtual StatementType type() const {
+      return STATEMENT_TYPE_BLOCK;
+    }
+
+  };
+  
   class PrintStatement : public Statement {
     std::string text;
 
@@ -211,7 +241,6 @@ namespace FuncGen {
     
   };
 
-  //class FunctionCall : public Statement {
   class FunctionCall : public Expression {
     Function* function;
     std::map<std::string, Value*> inputs;
@@ -269,7 +298,8 @@ namespace FuncGen {
     Context& context;
 
     std::string name;
-    std::vector<Statement*> statements;
+    //std::vector<Statement*> statements;
+    BlockStatement* stmt;
     std::map<std::string, Value*> inputs;
     std::map<std::string, Value*> outputs;
 
@@ -281,7 +311,7 @@ namespace FuncGen {
              const std::string& name_,
              const std::map<std::string, Data*>& inputs_,
              const std::map<std::string, Data*>& outputs_) :
-      uniqueNum(1), context(context_), name(name_) {
+      uniqueNum(1), context(context_), name(name_), stmt(new BlockStatement({})) {
 
       for (auto in : inputs_) {
         Value* v = new Value(in.second);
@@ -324,7 +354,7 @@ namespace FuncGen {
     }
     
     std::vector<Statement*> getStatements() const {
-      return statements;
+      return stmt->getStatements();
     }
 
     Statement* assignStmt(Value* res, Expression* expr) {
@@ -427,9 +457,10 @@ namespace FuncGen {
     }
 
     ~Function() {
-      for (auto stmt : statements) {
-        delete stmt;
-      }
+      delete stmt;
+      // for (auto stmt : statements) {
+      //   delete stmt;
+      // }
 
       for (auto value : values) {
         delete value.second;
@@ -522,15 +553,6 @@ namespace FuncGen {
 
   Function*
   precomputeTable(const std::string& tableName, Function* f, Context& c);
-
-  // // Problem: How do I write statements and functions in a way that is easy
-  // // but also embedded in C++? Expressions are doable. Why? I guess because
-  // // they can be constructed without reference to the current enclosing statement?
-  // // Whereas statements are usually constructed recursively inside one another.
-  // // This makes things a little trickier.
-  // static Context* globalContext;
-
-  // void setGlobalContext(Context* c);
 
 }
 
