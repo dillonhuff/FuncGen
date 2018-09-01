@@ -729,10 +729,11 @@ namespace FuncGen {
     auto DisNeg = f->slice(width - 1, width - 1, D);
 
     auto DleadingZeros = f->leadZeroCount(absD); // Priority encoder
-    auto D_ = f->shiftLeftVariable(DleadingZeros, D); // Barrell shift
-    
+    auto D_ = f->shiftLeftVariable(D, DleadingZeros); // Barrell shift
+    auto oneConst = f->constant(BitVector(width, 1 << (width - 2)));
 
-    
+    auto D_isPowOfTwo = f->equals(D_, oneConst);
+
     SECTION("8 / 4 == 2") {
       Simulator sim(*f);
       sim.setInput("N", BitVector(16, 8));

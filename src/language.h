@@ -337,6 +337,9 @@ namespace FuncGen {
     Value* shiftLeft(const int shiftValue, Value* v);
     Value* logicalShiftRight(const int shiftValue, Value* v);
     Value* invert(Value* v);
+    Value* leadZeroCount(Value* v);
+    Value* shiftLeftVariable(Value* v, Value* shiftAmount);
+    Value* equals(Value* a, Value* b);
 
     Function* getBuiltinSlice(const int inWidth,
                               const int end,

@@ -240,6 +240,25 @@ namespace FuncGen {
     return freshValue;
   }
 
+  Value* Function::leadZeroCount(Value* v) {
+    assert(false);
+    // string countName = "count_leading_zeros";
+    // Value* freshValue = makeUniqueValue(clog2(v->bitWidth()));
+    // auto call =
+    //   new FunctionCall(getBuiltinZeroCount(countName, v->bitWidth()), {{"in", v}});
+    // statements.push_back(new Assignment(freshValue, call);
+
+    // return freshValue;
+  }
+
+  Value* Function::shiftLeftVariable(Value* v, Value* shiftAmount) {
+    assert(false);
+  }
+
+  Value* Function::equals(Value* a, Value* b) {
+    assert(false);
+  }
+
   Function* Context::getBuiltin(const std::string& name, const int width) {
     string fullName = name + "_" + to_string(width);
     if (hasFunction(fullName)) {
@@ -273,5 +292,5 @@ namespace FuncGen {
     return newF;
 
   }
-  
+
 }
