@@ -808,12 +808,12 @@ namespace FuncGen {
       f->plusExpr(X, f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace));
     f->repeat(10, f->assignStmt(X, update));
 
-    f->printStmt("Got X");    
+    f->printStmt("Got X = %b", {X});
 
     auto longProd = f->freshVal(2*width);
     f->assign(longProd, f->timesExpr(f->zextExpr(N, 2*width), f->zextExpr(X, 2*width)));
 
-    f->printStmt("Got longProd");
+    f->printStmt("Got longProd = %b", {longProd});
 
     // Compute tentativ res using multiplication
     auto wConst = f->constant(width, width);

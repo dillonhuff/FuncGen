@@ -244,7 +244,28 @@ namespace FuncGen {
         }
       } else if (stmt.type() == STATEMENT_TYPE_PRINT) {
         const PrintStatement& printStmt = static_cast<const PrintStatement&>(stmt);
-        cout << printStmt.getText() << endl;
+
+        std::string textStr = "";
+        int i = 0;
+        int exprInd = 0;
+        auto text = printStmt.getText();
+        while(i < (int) text.size()) {
+          char nextChar = text[i];
+          if (nextChar != '%') {
+            cout << nextChar;
+            i++;
+          } else {
+            assert(text[i + 1] == 'b'); // Only supported format specifier
+            BitVector value = evaluateExpression(printStmt.getExprs()[exprInd]);
+            cout << value;
+            exprInd++;
+            i += 2;
+          }
+        }
+
+        cout << endl;
+
+        //cout << textStr << endl;
       } else {
         assert(stmt.type() == STATEMENT_TYPE_ASSIGNMENT);
         const Assignment& assign = static_cast<const Assignment&>(stmt);

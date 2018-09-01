@@ -274,6 +274,10 @@ namespace FuncGen {
   void Function::printStmt(const std::string& str) {
     stmt->addStmt(new PrintStatement(str));
   }
+
+  void Function::printStmt(const std::string& str, const std::vector<Expression*>& exprs) {
+    stmt->addStmt(new PrintStatement(str, exprs));
+  }
   
   Value* Function::equals(Value* a, Value* b) {
     assert(a != nullptr);

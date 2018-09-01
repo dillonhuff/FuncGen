@@ -166,10 +166,12 @@ namespace FuncGen {
   
   class PrintStatement : public Statement {
     std::string text;
+    std::vector<Expression*> exprs;
 
   public:
 
-    PrintStatement(const std::string& text_) : text(text_) {}
+    PrintStatement(const std::string& text_) : text(text_), exprs({}) {}
+    PrintStatement(const std::string& text_, const std::vector<Expression*>& exprs_) : text(text_), exprs(exprs_) {}
 
     std::string toString(const int indentLevel) const {
       return tab(indentLevel) + "\"" + text + "\"";
@@ -179,6 +181,10 @@ namespace FuncGen {
       return text;
     }
 
+    std::vector<Expression*> getExprs() const {
+      return exprs;
+    }
+    
     virtual StatementType type() const {
       return STATEMENT_TYPE_PRINT;
     }
@@ -402,6 +408,7 @@ namespace FuncGen {
     Value* logicalShiftRightVariable(Value* v, Value* shiftAmount);
     Value* equals(Value* a, Value* b);
     void printStmt(const std::string& str);
+    void printStmt(const std::string& str, const std::vector<Expression*>& exprs);
 
     Function* getBuiltinSlice(const int inWidth,
                               const int end,
