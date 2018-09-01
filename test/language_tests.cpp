@@ -14,14 +14,18 @@ namespace FuncGen {
   // 2. Allow expressions to be safely allocated somewhere
   // 3. Allow transitions in and out of 
 
-  Statement* active_function;
-  Statement* last_active_function;
+  Function* active_function;
+  
+  Statement* active_stmt_block;
+  Statement* last_active_stmt_block;
 
-#define IN_STMT(f, body) { last_active_function = active_function; \
-    active_function = (f);                                              \
+#define IN_STMT(f, body) { last_active_stmt_block = active_stmt_block; \
+    active_stmt_block = (f);                                              \
     (body)                                                              \
-      active_function = last_active_function;                           \
-    last_active_function = nullptr; }
+      active_stmt_block = last_active_stmt_block;                           \
+    last_active_stmt_block = nullptr; }
+
+#define IN_FUNC(f, body) {active_function = (f); (body); }
 
 #define IF(cond, a, b) { aBlock = new Block(); IN_STMT(aBlock, (a)); bBlock = new Block(); IN_STMT(bBlock, (b)); add_if_to_active_statement(cond, ablock, bblock); }
 
@@ -721,7 +725,7 @@ namespace FuncGen {
     Cases absCases{{BitVector(1, 0), in}, {BitVector(1, 1), abs->unop(tcNegW, in)}};
     auto caseRes = abs->caseStatement(topBit, absCases);
     abs->assign(out, caseRes);
-    
+
     SECTION("Twos complement absolute value") {
 
       SECTION("Positive to positive") {
