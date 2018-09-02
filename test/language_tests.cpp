@@ -886,6 +886,15 @@ bool genVerilator = runCmd(genCmd);
       REQUIRE(sim.getOutput("Q") == BitVector(16, -(8 / 3)));
     }
 
+    SECTION("239 / 17 == 14") {
+      Simulator sim(*f);
+      sim.setInput("N", BitVector(16, 239));
+      sim.setInput("D", BitVector(16, 17));
+      sim.evaluate();
+
+      REQUIRE(sim.getOutput("Q") == BitVector(16, 239 / 17));
+    }
+    
     SECTION("8 / -3 == -2") {
       Simulator sim(*f);
       sim.setInput("N", BitVector(16, 8));
