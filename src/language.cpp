@@ -29,13 +29,22 @@ namespace FuncGen {
 
     return freshValue;
   }
-  
-  Value* Function::makeUniqueValue(const int width) {
-    Value* v = new Value(context.arrayType(width));
-    string name = "av_" + std::to_string(uniqueNum);
+
+  Value* Function::makeUniqueValue(const std::string& name, const int width) {
+    Variable* v = new Variable(context.arrayType(width), name);
     uniqueNum++;
     values.insert({name, v});
     return v;
+
+  }
+
+  Value* Function::makeUniqueValue(const int width) {
+    string name = "av_" + std::to_string(uniqueNum);
+    return makeUniqueValue(name, width);
+    // Variable* v = new Variable(context.arrayType(width), name);
+    // uniqueNum++;
+    // values.insert({name, v});
+    // return v;
   }
 
   Value* Function::constant(const int bitWidth, const int value) {

@@ -58,9 +58,10 @@ namespace FuncGen {
 
     Expression(Data* dataType_) : dataType(dataType_) {}
 
-    virtual ExpressionType type() const {
-      return EXPRESSION_TYPE_VARIABLE;
-    }
+    virtual ExpressionType type() const = 0;
+    // {
+    //   return EXPRESSION_TYPE_VARIABLE;
+    // }
 
     Data* getData() const {
       return dataType;
@@ -75,6 +76,24 @@ namespace FuncGen {
     virtual ~Expression() {}
   };
 
+  class Variable : public Expression {
+
+    std::string name;
+    
+  public:
+
+    Variable(Data* dataType_, const std::string& name_) : Expression(dataType_), name(name_) {}
+
+    std::string getName() const {
+      return name;
+    }
+
+    virtual ExpressionType type() const {
+      return EXPRESSION_TYPE_VARIABLE;
+    }
+
+  };
+  
   typedef Expression Value;
 
   class ConstantValue : public Value {
@@ -118,7 +137,7 @@ namespace FuncGen {
   class Statement {
   public:
 
-    std::string toString(const int indentLevel) const {
+    virtual std::string toString(const int indentLevel) const {
       return tab(indentLevel) + "STATEMENT";
     }
 
@@ -328,13 +347,13 @@ namespace FuncGen {
       uniqueNum(1), context(context_), name(name_), stmt(new BlockStatement({})) {
 
       for (auto in : inputs_) {
-        Value* v = new Value(in.second);
+        Value* v = new Variable(in.second, in.first);
         inputs.insert({in.first, v});
         values.insert({in.first, v});
       }
 
       for (auto out : outputs_) {
-        Value* v = new Value(out.second);
+        Value* v = new Variable(out.second, out.first);
         outputs.insert({out.first, v});
         values.insert({out.first, v});
       }
@@ -390,11 +409,16 @@ namespace FuncGen {
     }
 
     Value* makeUniqueValue(const int width);
+    Value* makeUniqueValue(const std::string& name, const int width);
 
     inline Value* freshVal(const int width) {
       return makeUniqueValue(width);
     }
 
+    inline Value* freshVal(const std::string& name, const int width) {
+      return makeUniqueValue(name, width);
+    }
+    
     Value* unsignedDivide(Value* a, Value* b);
     Value* multiply(Value* a, Value* b);
     Value* subtract(Value* a, Value* b);
