@@ -795,73 +795,48 @@ bool genVerilator = runCmd(genCmd);
     SET(NisNeg, f->slice(width - 1, width - 1, N));
     SET(DisNeg, f->slice(width - 1, width - 1, D));
     
-    // auto NisNeg = f->slice(width - 1, width - 1, N);
-    // auto DisNeg = f->slice(width - 1, width - 1, D);
-
-    f->printStmt("Computed negatives in newton divide");
-
     SET(DleadingZeros, f->leadZeroCount(absD)); // Priority encoder
-
-    f->printStmt("Counted leading zeros");
 
     SET(shiftDistance, f->subtract(DleadingZeros, f->constant(width, 1)));
 
-    f->printStmt("Computed shift distance");    
-
     SET(D_, f->shiftLeftVariable(absD, shiftDistance)); // Barrell shift
-
-    f->printStmt("Got D_ = %b", {D_});
 
     SET(oneConst, f->constant(BitVector(width, 1 << (width - 2))));
 
     SET(D_isPowOfTwo, f->equals(D_, oneConst));
-
-    f->printStmt("Checked if d is a power of 2 in newton divide");
 
     SET(shiftDiv0, f->subtract(f->constant(width, width), shiftDistance));
     SET(shiftDiv, f->subtract(shiftDiv0, f->constant(width, 2)));
     SET(shrD, f->logicalShiftRightVariable(absN, shiftDiv));
 
     // Otherwise compute the NR update
-
-    f->printStmt("Computing X");
-
     SET(one, f->constant(width, 1 << (width - 1)));
-    //auto X = f->freshVal(width);
-    //f->assign(X, f->constant(width, 1 << (width - 1)));
     SET(X, f->constant(width, 1 << (width - 1)));
 
     int decPlace = width - 1;
-
     Expression* update =
-      f->plusExpr(X, f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace));
+      f->plusExpr(X,
+                  f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace));
     f->repeat(4, f->assignStmt(X, update));
 
-    f->printStmt("Got X = %b", {X});
-
     SET(longProd, f->timesExpr(f->zextExpr(absN, 2*width), f->zextExpr(X, 2*width)));
-    // auto longProd = f->freshVal(2*width);
-    // f->assign(longProd, f->timesExpr(f->zextExpr(absN, 2*width), f->zextExpr(X, 2*width)));
-
-    f->printStmt("Got longProd = %b", {longProd});
 
     // Compute tentativ res using multiplication
-    auto wConst = f->constant(width, width);
-    auto twoConst = f->constant(width, 2);
+    SET(wConst, f->constant(width, width));
+    SET(twoConst, f->constant(width, 2));
     SET(resShift, f->plusExpr(wConst, f->subExpr(f->subExpr(wConst, shiftDistance), twoConst)));
         
-    auto a0 = f->logicalShiftRightVariable(longProd, resShift);
+    SET(a0, f->logicalShiftRightVariable(longProd, resShift));
 
     // TODO: Set this to be the product
-    auto tentativeRes = f->freshVal(width);
-    f->assign(tentativeRes, f->sliceExpr(width - 1, 0, a0));
+    SET(tentativeRes, f->sliceExpr(width - 1, 0, a0));
     
     Cases inCases{{BitVector(1, 0), tentativeRes}, {BitVector(1, 1), shrD}};
     auto res = f->caseStatement(D_isPowOfTwo, inCases);
 
-    auto signsMatch = f->equals(DisNeg, NisNeg);
+    SET(signsMatch, f->equals(DisNeg, NisNeg));
     Cases negCases{{BitVector(1, 0), f->unop(tcNegW, res)}, {BitVector(1, 1), res}};
-    auto finalRes = f->caseStatement(signsMatch, negCases);
+    SET(finalRes, f->caseStatement(signsMatch, negCases));
     
     f->assign(Q, finalRes);
 
