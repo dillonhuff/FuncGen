@@ -77,6 +77,9 @@ namespace FuncGen {
       for (auto c : c->getCases()) {
         concat(needed, neededFunctions(c.second));
       }
+    } else if (s->type() == STATEMENT_TYPE_REPEAT) {
+      RepeatStmt* r = sc<RepeatStmt*>(s);
+      concat(needed, neededFunctions(r->body()));
     } else {
     }
 
@@ -205,7 +208,36 @@ namespace FuncGen {
 
       assignVars(outVar, outVarReg, out);
     } else if (stmt->type() == STATEMENT_TYPE_REPEAT) {
-      out << "// REPEAT" << endl;
+      auto rp = sc<RepeatStmt*>(stmt);
+      int numIters = rp->numIterations();
+      Statement* body = rp->body();
+
+      assert(body->type() == STATEMENT_TYPE_ASSIGNMENT);
+      auto innerAssign = sc<Assignment*>(body);
+      Value* v = innerAssign->getLHS();
+      assert(v->type() == EXPRESSION_TYPE_VARIABLE);
+      Variable* var = sc<Variable*>(v);
+
+      string updateVarName = map_find(v, state.valueNameMap);
+      // string name = state.uniqueName(var->getName());
+      // out << wireDecl(name, var->bitWidth());
+      // state.valueNameMap[v] = name;
+
+      Value* rhs = innerAssign->getRHS();
+      for (int i = 0; i < numIters; i++) {
+        out << "\t// ### Iteration " << i << endl;
+
+        string res = generateExpression(rhs, state, out);
+
+        string newName = state.uniqueName(var->getName());
+        out << wireDecl(newName, var->bitWidth()) << endl;
+        state.valueNameMap[v] = newName;
+        
+        assignVars(updateVarName, newName, out);
+        updateVarName = newName;
+
+        out << "\t// #########################" << endl;
+      }
     } else {
       assert(false);
       //out << "//" << stmt->toString(0) << endl;
