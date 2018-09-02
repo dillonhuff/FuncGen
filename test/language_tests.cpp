@@ -46,6 +46,14 @@ namespace FuncGen {
   Expression& operator==(Expression& a, Expression& b) {
     return *active_function->equalsExpr(&a, &b);
   }
+
+  Expression& operator<<(Expression& a, Expression& b) {
+    return *active_function->shiftLeftVariable(&a, &b);
+  }
+
+  Expression& operator>>(Expression& a, Expression& b) {
+    return *active_function->logicalShiftRightVariable(&a, &b);
+  }
   
 #define IF(cond, a, b) { aBlock = new Block(); IN_STMT(aBlock, (a)); bBlock = new Block(); IN_STMT(bBlock, (b)); add_if_to_active_statement(cond, ablock, bblock); }
 
@@ -813,18 +821,12 @@ bool genVerilator = runCmd(genCmd);
     
     SET(DleadingZeros, f->leadZeroCount(absD)); // Priority encoder
 
-    SET(shiftDistance, &(*DleadingZeros - *(f->constant(width, 1)) )); // f->subtract(DleadingZeros, f->constant(width, 1)));
+    SET(shiftDistance, &(*DleadingZeros - *(f->constant(width, 1)) ));
 
     SET(D_, f->shiftLeftVariable(absD, shiftDistance)); // Barrell shift
-
     SET(oneConst, f->constant(BitVector(width, 1 << (width - 2))));
-
-    //SET(D_isPowOfTwo, f->equals(D_, oneConst));
-    f->printStmt("D_       = %b", {D_});
-    f->printStmt("oneConst = %b", {oneConst});
     SET(D_isPowOfTwo, &(*D_ == *oneConst));
 
-    //SET(shiftDiv0, f->subtract(f->constant(width, width), shiftDistance));
     SET(shiftDiv0, &(*(f->constant(width, width)) - *(shiftDistance)));
     SET(shiftDiv, f->subtract(shiftDiv0, f->constant(width, 2)));
     SET(shrD, f->logicalShiftRightVariable(absN, shiftDiv));
@@ -836,8 +838,6 @@ bool genVerilator = runCmd(genCmd);
     int decPlace = width - 1;
     Expression* update =
       &(*X + *(f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace)));
-      // f->plusExpr(X,
-      //             f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace));
     f->repeat(4, f->assignStmt(X, update));
 
     SET(longProd, f->timesExpr(f->zextExpr(absN, 2*width), f->zextExpr(X, 2*width)));
