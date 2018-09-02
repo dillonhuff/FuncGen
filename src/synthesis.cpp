@@ -48,6 +48,8 @@ namespace FuncGen {
     }
   }
 
+  vector<Function*> neededFunctions(Function* f);
+  
   vector<Function*> neededFunctions(Expression* rhs) {
     vector<Function*> needed;
 
@@ -57,6 +59,7 @@ namespace FuncGen {
       for (auto in : f->getInputs()) {
         concat(needed, neededFunctions(in.second));
       }
+      concat(needed, neededFunctions(f->getFunction()));
       needed.push_back(f->getFunction());
     } else {
     }
@@ -84,6 +87,7 @@ namespace FuncGen {
     vector<Function*> needed{f};
     for (auto stmt : f->getStatements()) {
       for (auto nf : neededFunctions(stmt)) {
+        cout << "Need " << nf->getName() << endl;
         if (!elem(nf, needed)) {
           needed.push_back(nf);
         }
@@ -194,7 +198,7 @@ namespace FuncGen {
       out << "\t\tcase (" << switchVar << ") " << endl;
 
       for (auto cs : evaluatedCases) {
-        out << "\t\t\t" << cs.first.hex_string() << ": " << outVarReg << " <= " << cs.second << ";" << endl;
+        out << "\t\t\t" << cs.first.hex_string() << ": " << outVarReg << " = " << cs.second << ";" << endl;
       }
       out << "\t\tendcase" << endl;
       out << "\tend\n";
@@ -207,6 +211,107 @@ namespace FuncGen {
       //out << "//" << stmt->toString(0) << endl;
     }
   }
+
+  bool isBuiltin(Function* f) {
+    string name = f->getName();
+    vector<string> prefixes({"equals_", "slice_", "subtract_", "logical_shift_right", "arithmetic_shift_right_", "shift_left_", "zero_extend_", "multiply_", "add_", "invert_", "count_leading_zeros_"});
+    for (auto prefix : prefixes) {
+      if (hasPrefix(name, prefix)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  string binopDef(const std::string& op) {
+    return "\tassign out = in0 " + op + " in1;\n";
+  }
+
+  string builtinDef(Function* f) {
+    string name = f->getName();
+    if (hasPrefix(name, "add_")) {
+      return binopDef("+");
+    }
+    if (hasPrefix(name, "subtract_")) {
+      return binopDef("-");
+    }
+    if (hasPrefix(name, "multiply_")) {
+      return binopDef("*");
+    }
+    if (hasPrefix(name, "equals_")) {
+      return binopDef("==");
+    }
+    if (hasPrefix(name, "shift_left_")) {
+      return binopDef("<<");
+    }
+    if (hasPrefix(name, "logical_shift_right_")) {
+      return binopDef(">>");
+    }
+    if (hasPrefix(name, "arithmetic_shift_right_")) {
+      return binopDef(">>>");
+    }
+    if (hasPrefix(name, "invert_")) {
+      return "\tassign out = ~in;\n";
+    }
+
+    if (hasPrefix(name, "count_leading_zeros_")) {
+        std::string pre = "count_leading_zeros_";
+
+        int width = stoi(name.substr(pre.size()));
+
+        string str = "";
+        str += "\treg [" + to_string(width - 1) + ":0] out_reg;\n";
+        str += "\talways @(*) begin\n";
+        str += "\t\tcasez(in)\n";
+        for (int i = 0; i < width; i++) {
+          string inPattern = "";
+          for (int pre = 0; pre < i; pre++) {
+            inPattern += '0';
+          }
+          inPattern += '1';
+          for (int post = i + 1; post < width; post++) {
+            inPattern += '?';
+          }
+
+          string res = to_string(i);
+          str += "\t\t\t" + to_string(width) + "'b" + inPattern + ": out_reg = " + to_string(i) + ";\n";
+        }
+        str += "\t\tendcase\n";
+        str += "\tend\n";
+        str += "\tassign out = out_reg;\n";
+        return str;
+    }
+
+    if (hasPrefix(name, "slice_")) {
+        std::string pre = "slice_";
+
+        size_t sz;
+        int endSlice = stoi(name.substr(pre.size()), &sz);
+
+        int startSlice = stoi(name.substr(pre.size() + sz + 1));
+
+        return "\tassign out = in[" + to_string(endSlice) + ":" + to_string(startSlice) + "];\n";
+    }
+
+    if (hasPrefix(name, "zero_extend_")) {
+      std::string pre = "zero_extend_";
+
+      size_t sz;
+      int outWidth = stoi(name.substr(pre.size()), &sz);
+
+      int inWidth = stoi(name.substr(pre.size() + sz + 1));
+
+      assert(outWidth >= inWidth);
+
+      return "\tassign out = {{(" + to_string(outWidth) + " - " + to_string(inWidth) + "){1'b0}}, in};\n";
+    }
+
+
+    
+    
+    return "\t//insert definition\n";
+  }
   
   void synthesizeVerilog(Function* f, const SynthesisConstraints& constraints) {
     ofstream out(f->getName() + ".v");
@@ -216,6 +321,8 @@ namespace FuncGen {
 
     CodeGenState state;
     //map<Value*, string> valueNameMap;
+
+    out << "/* verilator lint_off UNUSED */" << endl;
     
     for (auto f : nf) {
       out << "module " + f->getName() + "(";
@@ -237,9 +344,15 @@ namespace FuncGen {
 
       out << ");" << endl;
 
-      for (auto stmt : f->getStatements()) {
-        generateStmt(state, stmt, out);
-        //out << "// " << stmt->toString(1) << endl;
+      if (isBuiltin(f)) {
+        assert(f->getStatements().size() == 0);
+        out << builtinDef(f);
+      }  else {
+      
+        for (auto stmt : f->getStatements()) {
+          generateStmt(state, stmt, out);
+          //out << "// " << stmt->toString(1) << endl;
+        }
       }
 
       out << "endmodule" << endl << endl;

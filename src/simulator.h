@@ -8,23 +8,6 @@ using namespace std;
 namespace FuncGen {
 
 
-  static inline
-  bool hasPrefix(const std::string& name, const std::string& prefix) {
-    return name.substr(0, prefix.size()) == prefix;
-  }
-
-  static inline bool isZext(const std::string& name) {
-    return hasPrefix(name, "zero_extend_");
-  }
-
-  static inline bool isUnsignedDivide(const std::string& name) {
-    return hasPrefix(name, "unsigned_divide_");
-  }
-
-  static inline bool isShiftLeft(const std::string& name) {
-    return hasPrefix(name, "shift_left_");
-  }
-  
   class Simulator {
 
     Function& f;
@@ -141,7 +124,6 @@ namespace FuncGen {
       } else if (hasPrefix(name, "slice_")) {
         std::string pre = "slice_";
 
-        //std::cout << "slice name       = " << name << std::endl;
         size_t sz;
         int endSlice = stoi(name.substr(pre.size()), &sz);
 

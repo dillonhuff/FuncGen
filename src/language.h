@@ -629,5 +629,22 @@ namespace FuncGen {
   Function*
   precomputeTable(const std::string& tableName, Function* f, Context& c);
 
+  static inline
+  bool hasPrefix(const std::string& name, const std::string& prefix) {
+    return name.substr(0, prefix.size()) == prefix;
+  }
+
+  static inline bool isZext(const std::string& name) {
+    return hasPrefix(name, "zero_extend_");
+  }
+
+  static inline bool isUnsignedDivide(const std::string& name) {
+    return hasPrefix(name, "unsigned_divide_");
+  }
+
+  static inline bool isShiftLeft(const std::string& name) {
+    return hasPrefix(name, "shift_left_");
+  }
+  
 }
 
