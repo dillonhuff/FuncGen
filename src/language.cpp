@@ -6,6 +6,12 @@ using namespace std;
 namespace FuncGen {
 
   Value*
+  Function::caseStatement(Value* in, Expression* trueExpr, Expression* falseExpr) {
+    Cases inCases{{BitVector(1, 0), falseExpr}, {BitVector(1, 1), trueExpr}};    
+    return caseStatement(in, inCases);
+  }
+  
+  Value*
   Function::caseStatement(Value* in, const std::vector<std::pair<BitVector, BitVector> >& cases) {
     assert(cases.size() > 0);
     int resWidth = cases.at(0).second.bitLength();

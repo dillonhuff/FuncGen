@@ -817,7 +817,8 @@ bool genVerilator = runCmd(genCmd);
 
     SET(D_isPowOfTwo, f->equals(D_, oneConst));
 
-    SET(shiftDiv0, f->subtract(f->constant(width, width), shiftDistance));
+    //SET(shiftDiv0, f->subtract(f->constant(width, width), shiftDistance));
+    SET(shiftDiv0, &(*(f->constant(width, width)) - *(shiftDistance)));
     SET(shiftDiv, f->subtract(shiftDiv0, f->constant(width, 2)));
     SET(shrD, f->logicalShiftRightVariable(absN, shiftDiv));
 
@@ -838,18 +839,18 @@ bool genVerilator = runCmd(genCmd);
     SET(wConst, f->constant(width, width));
     SET(twoConst, f->constant(width, 2));
     SET(resShift, f->plusExpr(wConst, f->subExpr(f->subExpr(wConst, shiftDistance), twoConst)));
-        
-    SET(a0, f->logicalShiftRightVariable(longProd, resShift));
 
-    // TODO: Set this to be the product
+    SET(a0, f->logicalShiftRightVariable(longProd, resShift));
     SET(tentativeRes, f->sliceExpr(width - 1, 0, a0));
-    
-    Cases inCases{{BitVector(1, 0), tentativeRes}, {BitVector(1, 1), shrD}};
-    auto res = f->caseStatement(D_isPowOfTwo, inCases);
+
+    auto res = f->caseStatement(D_isPowOfTwo, shrD, tentativeRes);
+    // Cases inCases{{BitVector(1, 0), tentativeRes}, {BitVector(1, 1), shrD}};
+    // auto res = f->caseStatement(D_isPowOfTwo, inCases);
 
     SET(signsMatch, f->equals(DisNeg, NisNeg));
-    Cases negCases{{BitVector(1, 0), f->unop(tcNegW, res)}, {BitVector(1, 1), res}};
-    SET(finalRes, f->caseStatement(signsMatch, negCases));
+    auto finalRes = f->caseStatement(signsMatch, res, f->unop(tcNegW, res));
+    // Cases negCases{{BitVector(1, 0), f->unop(tcNegW, res)}, {BitVector(1, 1), res}};
+    // SET(finalRes, f->caseStatement(signsMatch, negCases));
     
     f->assign(Q, finalRes);
 

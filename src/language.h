@@ -394,8 +394,8 @@ namespace FuncGen {
       return new Assignment(res, expr);
     }
 
+    Value* caseStatement(Value* in, Expression* trueExpr, Expression* falseExpr);
     Value* caseStatement(Value* in, const std::vector<std::pair<BitVector, BitVector> >& cases);
-
     Value* caseStatement(Value* in, const Cases& cases);
 
     Expression* unop(const std::string& name, Value* arg);
