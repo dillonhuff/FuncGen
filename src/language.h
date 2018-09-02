@@ -287,6 +287,10 @@ namespace FuncGen {
       return inputs;
     }
 
+    Function* getFunction() const {
+      return function;
+    }
+
     Value* getInput(const std::string& name) const {
       assert(contains_key(name, inputs));
 

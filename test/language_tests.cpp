@@ -928,7 +928,7 @@ bool genVerilator = runCmd(genCmd);
 
         synthesizeVerilog(f, constraints);
 
-        //REQUIRE(runVerilatorTB(f->getName()));
+        REQUIRE(runVerilatorTB(f->getName()));
       }
     }
     
