@@ -487,7 +487,7 @@ namespace FuncGen {
       Expression* bBitsExt = zextExpr(b, 2*b->bitWidth());
 
       Expression* prodBits = timesExpr(aBitsExt, bBitsExt);
-      Expression* res = sliceExpr(a->bitWidth(), 0, lshrExpr(prodBits, decimalPlace));
+      Expression* res = sliceExpr(a->bitWidth() - 1, 0, lshrExpr(prodBits, decimalPlace));
 
       return res;
     }
@@ -513,7 +513,7 @@ namespace FuncGen {
     }
 
     Expression* lshrExpr(Value* a, int width) {
-      return new FunctionCall(getBuiltin("logical_shift_right_" + std::to_string(width), a->bitWidth()),
+      return new FunctionCall(getBuiltinUnop("logical_shift_right_" + std::to_string(width), a->bitWidth()),
                               {{"in", a}});
     }
     

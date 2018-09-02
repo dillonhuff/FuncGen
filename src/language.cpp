@@ -229,7 +229,7 @@ namespace FuncGen {
     std::string shiftName = "logical_shift_right_" + std::to_string(shiftValue);
 
     Value* freshValue = makeUniqueValue(v->bitWidth());
-    stmt->addStmt(new Assignment(freshValue, new FunctionCall(getBuiltin("logical_shift_right", shiftValue), {{"in", v}})));
+    stmt->addStmt(new Assignment(freshValue, new FunctionCall(getBuiltinUnop("logical_shift_right", shiftValue), {{"in", v}})));
 
     return freshValue;
   }

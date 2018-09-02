@@ -233,7 +233,7 @@ namespace FuncGen {
         out << wireDecl(newName, var->bitWidth()) << endl;
         state.valueNameMap[v] = newName;
         
-        assignVars(updateVarName, newName, out);
+        assignVars(newName, updateVarName, out);
         updateVarName = newName;
 
         out << "\t// #########################" << endl;
@@ -277,9 +277,16 @@ namespace FuncGen {
     if (hasPrefix(name, "shift_left_")) {
       return binopDef("<<");
     }
-    if (hasPrefix(name, "logical_shift_right_")) {
+    if (hasPrefix(name, "logical_shift_right_variable_")) {
       return binopDef(">>");
     }
+    if (hasPrefix(name, "logical_shift_right_")) {
+      std::string pre = "logical_shift_right_";
+      int shiftAmount = stoi(name.substr(pre.size()));
+
+      return "\tassign out = in >> " + to_string(shiftAmount) + " ;\n";
+    }
+
     if (hasPrefix(name, "arithmetic_shift_right_")) {
       return binopDef(">>>");
     }

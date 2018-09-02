@@ -37,6 +37,9 @@ int main() {
 
   top.eval();
 
+  cout << "top.Q      = " << (int) top.Q << endl;
+  cout << "(239 / 17) = " << (239 / 17) << endl;
+
   assert(top.Q == (239 / 17));
   
 }
