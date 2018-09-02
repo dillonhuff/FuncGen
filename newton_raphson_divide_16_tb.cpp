@@ -24,4 +24,19 @@ int main() {
 
   assert(top.Q == ((-8 / 2) & 0xffff));
 
+
+  top.N = 8;
+  top.D = 3;
+
+  top.eval();
+
+  assert(top.Q == (8 / 3));
+
+  top.N = 239;
+  top.D = 17;
+
+  top.eval();
+
+  assert(top.Q == (239 / 17));
+  
 }
