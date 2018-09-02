@@ -49,6 +49,33 @@ namespace FuncGen {
     return needed;
   }
 
+#define sc static_cast
+
+  typedef std::map<Value*, string> ValMap;
+
+  string generateExpression(Expression* expr,
+                            ValMap valueNameMap,
+                            ostream& out) {
+    if (expr->type() == EXPRESSION_TYPE_VARIABLE) {
+      auto var = sc<Variable*>(expr);
+      return var->getName();
+    } else if (expr->type() == EXPRESSION_TYPE_FUNCTION_CALL) {
+      auto fc = sc<FunctionCall*>(expr);
+      out << "\t" << fc->functionName() << "();" << endl;
+      return fc->outputValueName();
+    } else if (expr->type() == EXPRESSION_TYPE_CONSTANT) {
+      auto c = sc<ConstantValue*>(expr);
+      auto bv = c->getValue();
+      return bv.hex_string();
+    } else {
+      assert(false);
+    }
+  }
+
+  void assignVars(const std::string& lhs, const std::string& rhs, ostream& out) {
+    out << "\tassign " << lhs << " = " << rhs << ";" << endl;
+  }
+
   void generateStmt(map<Value*, string>& valueNameMap,
                     Statement* stmt,
                     std::ostream& out) {
@@ -59,12 +86,12 @@ namespace FuncGen {
       auto lhs = assign->getLHS();
       assert(lhs->type() == EXPRESSION_TYPE_VARIABLE);
 
-      //auto rhs = assign->getRHS();
+      auto rhs = assign->getRHS();
 
       string name = getWire(static_cast<Variable*>(lhs), valueNameMap, out);
-      //out << declareWire(static_cast<Variable*>(lhs)) << endl;
-      
-      //out << "wire [" << endl;
+      string res = generateExpression(rhs, valueNameMap, out);
+      assignVars(name, res, out);
+
     } else {
       out << "//" << stmt->toString(0) << endl;
     }

@@ -287,6 +287,8 @@ namespace FuncGen {
       return inputs;
     }
 
+    std::string outputValueName() const;
+
     Function* getFunction() const {
       return function;
     }

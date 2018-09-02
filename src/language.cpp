@@ -5,6 +5,10 @@ using namespace std;
 
 namespace FuncGen {
 
+  std::string FunctionCall::outputValueName() const {
+    return function->outputValueName();
+  }
+
   Value*
   Function::caseStatement(Value* in, Expression* trueExpr, Expression* falseExpr) {
     Cases inCases{{BitVector(1, 0), falseExpr}, {BitVector(1, 1), trueExpr}};    
