@@ -217,11 +217,6 @@ namespace FuncGen {
 
   public:
 
-    // Case(Value* result_,
-    //      Value* in_,
-    //      const std::vector<std::pair<BitVector, BitVector> >& cases_) :
-    //   result(result_), in(in_), cases() {}
-
     Case(Value* result_,
          Value* in_,
          const std::vector<std::pair<BitVector, Expression*> >& cases_) :
@@ -288,6 +283,7 @@ namespace FuncGen {
     }
 
     std::string outputValueName() const;
+    int outputWidth() const;
 
     Function* getFunction() const {
       return function;
@@ -387,6 +383,11 @@ namespace FuncGen {
       return (*std::begin(outputs)).second;
     }
 
+    int outputValueWidth() const {
+      assert(outputs.size() == 1);
+      return (*std::begin(outputs)).second->bitWidth();
+    }
+    
     std::string outputValueName() const {
       assert(outputs.size() == 1);
       return (*std::begin(outputs)).first;
@@ -444,6 +445,8 @@ namespace FuncGen {
                               const int end,
                               const int start);
 
+    Function* getBuiltinZext(const std::string& name, const int inWidth, const int outWidth);    
+    Function* getBuiltinUnop(const std::string& name, const int width);
     Function* getBuiltin(const std::string& name, const int width);
 
     void assign(Value* a, Value* b) {
@@ -505,7 +508,7 @@ namespace FuncGen {
     }
 
     Expression* zextExpr(Value* a, int width) {
-      return new FunctionCall(getBuiltin("zero_extend_" + std::to_string(width), width),
+      return new FunctionCall(getBuiltinZext("zero_extend_" + std::to_string(width), a->bitWidth(), width),
                               {{"in", a}});
     }
 
@@ -557,7 +560,10 @@ namespace FuncGen {
       return map_find(width, datas);
     }
 
+    Function* getBuiltinZext(const std::string& name, const int inWidth, const int outWidth);
+    Function* getBuiltinReduce(const std::string& name, const int width);
     Function* getBuiltin(const std::string& name, const int width);
+    Function* getBuiltinUnop(const std::string& name, const int width);
 
     Function* getBuiltinSlice(const int inWidth,
                               const int end,

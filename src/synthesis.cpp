@@ -48,15 +48,35 @@ namespace FuncGen {
     }
   }
 
+  vector<Function*> neededFunctions(Expression* rhs) {
+    vector<Function*> needed;
+
+    if (rhs->type() == EXPRESSION_TYPE_FUNCTION_CALL) {
+      
+      FunctionCall* f = static_cast<FunctionCall*>(rhs);
+      for (auto in : f->getInputs()) {
+        concat(needed, neededFunctions(in.second));
+      }
+      needed.push_back(f->getFunction());
+    } else {
+    }
+
+    return needed;
+  }
+
   vector<Function*> neededFunctions(Statement* s) {
     vector<Function*> needed;
     if (s->type() == STATEMENT_TYPE_ASSIGNMENT) {
       auto rhs = static_cast<Assignment*>(s)->getRHS();
-      if (rhs->type() == EXPRESSION_TYPE_FUNCTION_CALL) {
-        FunctionCall* f = static_cast<FunctionCall*>(rhs);
-        needed.push_back(f->getFunction());
+      concat(needed, neededFunctions(rhs));
+    } else if (s->type() == STATEMENT_TYPE_CASE) {
+      Case* c = sc<Case*>(s);
+      for (auto c : c->getCases()) {
+        concat(needed, neededFunctions(c.second));
       }
+    } else {
     }
+
     return needed;
   }
 
@@ -96,13 +116,18 @@ namespace FuncGen {
     }
     return str;
   }
+
+  string wireDecl(const std::string& name, int width) {
+    return "\twire [" + to_string(width - 1) + ":0] " + name + ";";
+  }
   
   string generateExpression(Expression* expr,
                             CodeGenState& state,
                             ostream& out) {
     if (expr->type() == EXPRESSION_TYPE_VARIABLE) {
-      auto var = sc<Variable*>(expr);
-      return var->getName();
+      return getWire(expr, state, out);
+      // auto var = sc<Variable*>(expr);
+      // return var->getName();
     } else if (expr->type() == EXPRESSION_TYPE_FUNCTION_CALL) {
       auto fc = sc<FunctionCall*>(expr);
 
@@ -118,6 +143,8 @@ namespace FuncGen {
 
       string outName = fc->outputValueName();
       string outWire = state.uniqueName(outName);
+
+      out << wireDecl(outWire, fc->outputWidth()) << endl;
 
       inputMap.insert({outName, outWire});
 
@@ -148,8 +175,36 @@ namespace FuncGen {
       string res = generateExpression(rhs, state, out);
       assignVars(name, res, out);
 
+    } else if (stmt->type() == STATEMENT_TYPE_CASE) {
+      auto cs = sc<Case*>(stmt);
+      
+      string switchVar = generateExpression(cs->getInput(), state, out);
+      string outVar = generateExpression(cs->getResult(), state, out);
+      string outVarReg = outVar + "reg";
+
+      out << "\treg [" << (cs->getResult()->bitWidth() - 1) << ":0] " << outVarReg << "; " << endl;
+
+      vector<pair<BitVector, string> > evaluatedCases;
+      for (auto c : cs->getCases()) {
+        string res = generateExpression(c.second, state, out);
+        evaluatedCases.push_back({c.first, res});
+      }
+
+      out << "\talways @(*) begin\n";
+      out << "\t\tcase (" << switchVar << ") " << endl;
+
+      for (auto cs : evaluatedCases) {
+        out << "\t\t\t" << cs.first.hex_string() << ": " << outVarReg << " <= " << cs.second << ";" << endl;
+      }
+      out << "\t\tendcase" << endl;
+      out << "\tend\n";
+
+      assignVars(outVar, outVarReg, out);
+    } else if (stmt->type() == STATEMENT_TYPE_REPEAT) {
+      out << "// REPEAT" << endl;
     } else {
-      out << "//" << stmt->toString(0) << endl;
+      assert(false);
+      //out << "//" << stmt->toString(0) << endl;
     }
   }
   
@@ -187,7 +242,7 @@ namespace FuncGen {
         //out << "// " << stmt->toString(1) << endl;
       }
 
-      out << "endmodule" << endl;
+      out << "endmodule" << endl << endl;
     }
     
 

@@ -843,9 +843,11 @@ bool genVerilator = runCmd(genCmd);
     SET(longProd, f->timesExpr(f->zextExpr(absN, 2*width), f->zextExpr(X, 2*width)));
 
     // Compute tentative res using multiplication
-    SET(wConst, f->constant(width, width));
-    SET(twoConst, f->constant(width, 2));
-    SET(resShift, f->plusExpr(wConst, f->subExpr(f->subExpr(wConst, shiftDistance), twoConst)));
+    SET(wConst, f->constant(2*width, width));
+    SET(twoConst, f->constant(2*width, 2));
+    SET(resShift, f->plusExpr(wConst, f->subExpr(f->subExpr(wConst, f->zextExpr(shiftDistance, 2*width)), twoConst)));
+
+    f->printStmt("resShift = %b", {resShift});
 
     SET(a0, f->logicalShiftRightVariable(longProd, resShift));
     SET(tentativeRes, f->sliceExpr(width - 1, 0, a0));

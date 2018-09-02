@@ -9,6 +9,10 @@ namespace FuncGen {
     return function->outputValueName();
   }
 
+  int FunctionCall::outputWidth() const {
+    return function->outputValueWidth();
+  }
+  
   Value*
   Function::caseStatement(Value* in, Expression* trueExpr, Expression* falseExpr) {
     Cases inCases{{BitVector(1, 0), falseExpr}, {BitVector(1, 1), trueExpr}};    
@@ -206,10 +210,9 @@ namespace FuncGen {
     }
 
   Value* Function::zeroExtend(const int resWidth, Value* v) {
-    //std::string zextName = "zero_extend_" + std::to_string(resWidth);
 
       Value* freshValue = makeUniqueValue(resWidth);
-      stmt->addStmt(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("zero_extend", resWidth), {{"in", v}})));
+      stmt->addStmt(new Assignment(freshValue, new FunctionCall(getContext().getBuiltinUnop("zero_extend", resWidth), {{"in", v}})));
       return freshValue;
     }
 
@@ -217,7 +220,7 @@ namespace FuncGen {
     std::string shiftName = "shift_left_" + std::to_string(shiftValue);
 
     Value* freshValue = makeUniqueValue(v->bitWidth());
-    stmt->addStmt(new Assignment(freshValue, new FunctionCall(getBuiltin("shift_left", shiftValue), {{"in", v}})));
+    stmt->addStmt(new Assignment(freshValue, new FunctionCall(getBuiltinUnop("shift_left", shiftValue), {{"in", v}})));
 
     return freshValue;
   }
@@ -235,15 +238,23 @@ namespace FuncGen {
     std::string invName = "invert_" + std::to_string(v->bitWidth());
 
     Value* freshValue = makeUniqueValue(v->bitWidth());
-    stmt->addStmt(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("invert", v->bitWidth()), {{"in", v}})));
+    stmt->addStmt(new Assignment(freshValue, new FunctionCall(getContext().getBuiltinUnop("invert", v->bitWidth()), {{"in", v}})));
 
     return freshValue;
+  }
+
+  Function* Function::getBuiltinZext(const std::string& name, const int inWidth, const int outWidth) {
+    return getContext().getBuiltinZext(name, inWidth, outWidth);
   }
 
   Function* Function::getBuiltin(const std::string& name, const int width) {
     return getContext().getBuiltin(name, width);
   }
 
+  Function* Function::getBuiltinUnop(const std::string& name, const int width) {
+    return getContext().getBuiltinUnop(name, width);
+  }
+  
   Function* Function::getBuiltinSlice(const int inWidth,
                                       const int end,
                                       const int start) {
@@ -263,7 +274,7 @@ namespace FuncGen {
     string countName = "count_leading_zeros";
     Value* freshValue = makeUniqueValue(v->bitWidth());
     auto call =
-      new FunctionCall(getBuiltin(countName, v->bitWidth()), {{"in", v}});
+      new FunctionCall(getBuiltinUnop(countName, v->bitWidth()), {{"in", v}});
     stmt->addStmt(new Assignment(freshValue, call));
 
     return freshValue;
@@ -305,7 +316,7 @@ namespace FuncGen {
     assert(sameWidth(*a, *b));
 
     Value* freshValue = makeUniqueValue(1);
-    stmt->addStmt(new Assignment(freshValue, new FunctionCall(getContext().getBuiltin("equals", a->bitWidth()), {{"in0", a}, {"in1", b}})));
+    stmt->addStmt(new Assignment(freshValue, new FunctionCall(getContext().getBuiltinReduce("equals", a->bitWidth()), {{"in0", a}, {"in1", b}})));
     return freshValue;
   }
 
@@ -315,7 +326,7 @@ namespace FuncGen {
 
     assert(sameWidth(*a, *b));
 
-    return new FunctionCall(getContext().getBuiltin("equals", 1), {{"in0", a}, {"in1", b}});
+    return new FunctionCall(getContext().getBuiltinReduce("equals", a->bitWidth()), {{"in0", a}, {"in1", b}});
   }
   
   Function* Context::getBuiltin(const std::string& name, const int width) {
@@ -326,7 +337,50 @@ namespace FuncGen {
 
     auto newF =
       newFunction(fullName,
-                  {{"in0", arrayType(width)}, {"in1", arrayType(32)}},
+                  {{"in0", arrayType(width)}, {"in1", arrayType(width)}},
+                  {{"out", arrayType(width)}});
+
+    return newF;
+  }
+
+  Function* Context::getBuiltinZext(const std::string& name, const int inWidth, const int outWidth) {
+
+    string fullName = name + "_" + to_string(inWidth) + "_" + to_string(outWidth);
+    if (hasFunction(fullName)) {
+      return getFunction(fullName);
+    }
+
+    auto newF =
+      newFunction(fullName,
+                  {{"in", arrayType(inWidth)}},
+                  {{"out", arrayType(outWidth)}});
+
+    return newF;
+  }
+  
+  Function* Context::getBuiltinReduce(const std::string& name, const int width) {
+    string fullName = name + "_" + to_string(width);
+    if (hasFunction(fullName)) {
+      return getFunction(fullName);
+    }
+
+    auto newF =
+      newFunction(fullName,
+                  {{"in0", arrayType(width)}, {"in1", arrayType(width)}},
+                  {{"out", arrayType(1)}});
+
+    return newF;
+  }
+  
+  Function* Context::getBuiltinUnop(const std::string& name, const int width) {
+    string fullName = name + "_" + to_string(width);
+    if (hasFunction(fullName)) {
+      return getFunction(fullName);
+    }
+
+    auto newF =
+      newFunction(fullName,
+                  {{"in", arrayType(width)}},
                   {{"out", arrayType(width)}});
 
     return newF;

@@ -668,6 +668,7 @@ namespace bsim {
   quad_value_bit_vector
   sub_general_width_bv(const quad_value_bit_vector& a,
   		       const quad_value_bit_vector& b) {
+    
     int Width = a.bitLength();
     quad_value_bit_vector diff(a.bitLength());
     quad_value_bit_vector a_cpy = a;
