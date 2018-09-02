@@ -42,6 +42,10 @@ namespace FuncGen {
   Expression& operator*(Expression& a, Expression& b) {
     return *active_function->timesExpr(&a, &b);
   }
+
+  Expression& operator==(Expression& a, Expression& b) {
+    return *active_function->equalsExpr(&a, &b);
+  }
   
 #define IF(cond, a, b) { aBlock = new Block(); IN_STMT(aBlock, (a)); bBlock = new Block(); IN_STMT(bBlock, (b)); add_if_to_active_statement(cond, ablock, bblock); }
 
@@ -815,7 +819,10 @@ bool genVerilator = runCmd(genCmd);
 
     SET(oneConst, f->constant(BitVector(width, 1 << (width - 2))));
 
-    SET(D_isPowOfTwo, f->equals(D_, oneConst));
+    //SET(D_isPowOfTwo, f->equals(D_, oneConst));
+    f->printStmt("D_       = %b", {D_});
+    f->printStmt("oneConst = %b", {oneConst});
+    SET(D_isPowOfTwo, &(*D_ == *oneConst));
 
     //SET(shiftDiv0, f->subtract(f->constant(width, width), shiftDistance));
     SET(shiftDiv0, &(*(f->constant(width, width)) - *(shiftDistance)));
@@ -835,7 +842,7 @@ bool genVerilator = runCmd(genCmd);
 
     SET(longProd, f->timesExpr(f->zextExpr(absN, 2*width), f->zextExpr(X, 2*width)));
 
-    // Compute tentativ res using multiplication
+    // Compute tentative res using multiplication
     SET(wConst, f->constant(width, width));
     SET(twoConst, f->constant(width, 2));
     SET(resShift, f->plusExpr(wConst, f->subExpr(f->subExpr(wConst, shiftDistance), twoConst)));
@@ -844,13 +851,9 @@ bool genVerilator = runCmd(genCmd);
     SET(tentativeRes, f->sliceExpr(width - 1, 0, a0));
 
     auto res = f->caseStatement(D_isPowOfTwo, shrD, tentativeRes);
-    // Cases inCases{{BitVector(1, 0), tentativeRes}, {BitVector(1, 1), shrD}};
-    // auto res = f->caseStatement(D_isPowOfTwo, inCases);
 
     SET(signsMatch, f->equals(DisNeg, NisNeg));
     auto finalRes = f->caseStatement(signsMatch, res, f->unop(tcNegW, res));
-    // Cases negCases{{BitVector(1, 0), f->unop(tcNegW, res)}, {BitVector(1, 1), res}};
-    // SET(finalRes, f->caseStatement(signsMatch, negCases));
     
     f->assign(Q, finalRes);
 

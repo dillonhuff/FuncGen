@@ -305,6 +305,15 @@ namespace FuncGen {
     return freshValue;
   }
 
+  Value* Function::equalsExpr(Value* a, Value* b) {
+    assert(a != nullptr);
+    assert(b != nullptr);
+
+    assert(sameWidth(*a, *b));
+
+    return new FunctionCall(getContext().getBuiltin("equals", 1), {{"in0", a}, {"in1", b}});
+  }
+  
   Function* Context::getBuiltin(const std::string& name, const int width) {
     string fullName = name + "_" + to_string(width);
     if (hasFunction(fullName)) {

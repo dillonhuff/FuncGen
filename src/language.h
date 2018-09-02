@@ -465,9 +465,11 @@ namespace FuncGen {
     //   return freshValue;
     // }
 
-  Value* sliceExpr(const int end, const int start, Value* v) {
-    return new FunctionCall(getBuiltinSlice(v->bitWidth(), end, start), {{"in", v}});
-  }
+    Value* equalsExpr(Value* a, Value* b);    
+
+    Value* sliceExpr(const int end, const int start, Value* v) {
+      return new FunctionCall(getBuiltinSlice(v->bitWidth(), end, start), {{"in", v}});
+    }
     
     Expression* fpMul(Value* a, Value* b, const int decimalPlace) {
       assert(a->bitWidth() == b->bitWidth());
