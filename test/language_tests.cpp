@@ -27,10 +27,22 @@ namespace FuncGen {
     last_active_stmt_block = nullptr; }
 
 #define IN_FUNC(f, body) {active_function = (f); (body); }
-#define SET(a, b) auto a = active_function->freshVal(#a, b->bitWidth()); active_function->assign(a, b);
+#define SET(a, b) auto a = active_function->freshVal(#a, (b)->bitWidth()); active_function->assign(a, b);
 
 #define BUILD_FUNC(f) {active_function = (f); }
 
+  Expression& operator+(Expression& a, Expression& b) {
+    return *active_function->plusExpr(&a, &b);
+  }
+
+  Expression& operator-(Expression& a, Expression& b) {
+    return *active_function->subExpr(&a, &b);
+  }
+
+  Expression& operator*(Expression& a, Expression& b) {
+    return *active_function->timesExpr(&a, &b);
+  }
+  
 #define IF(cond, a, b) { aBlock = new Block(); IN_STMT(aBlock, (a)); bBlock = new Block(); IN_STMT(bBlock, (b)); add_if_to_active_statement(cond, ablock, bblock); }
 
   // IF(a,
@@ -797,7 +809,7 @@ bool genVerilator = runCmd(genCmd);
     
     SET(DleadingZeros, f->leadZeroCount(absD)); // Priority encoder
 
-    SET(shiftDistance, f->subtract(DleadingZeros, f->constant(width, 1)));
+    SET(shiftDistance, &(*DleadingZeros - *(f->constant(width, 1)) )); // f->subtract(DleadingZeros, f->constant(width, 1)));
 
     SET(D_, f->shiftLeftVariable(absD, shiftDistance)); // Barrell shift
 
@@ -815,8 +827,9 @@ bool genVerilator = runCmd(genCmd);
 
     int decPlace = width - 1;
     Expression* update =
-      f->plusExpr(X,
-                  f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace));
+      &(*X + *(f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace)));
+      // f->plusExpr(X,
+      //             f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace));
     f->repeat(4, f->assignStmt(X, update));
 
     SET(longProd, f->timesExpr(f->zextExpr(absN, 2*width), f->zextExpr(X, 2*width)));
@@ -839,14 +852,6 @@ bool genVerilator = runCmd(genCmd);
     SET(finalRes, f->caseStatement(signsMatch, negCases));
     
     f->assign(Q, finalRes);
-
-    // TODO: Negate if output is negative
-    //       Do real table lookup approximation
-    //       Synthesize verilog from this data structure
-
-    // Cleanup: Create ite expression builder
-    //          Move to define_function based system to reduce boilerplate
-    //          Separate expression building from statement building even more
 
     SECTION("8 / 4 == 2") {
       Simulator sim(*f);
