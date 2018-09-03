@@ -248,7 +248,7 @@ namespace FuncGen {
 
   bool isBuiltin(Function* f) {
     string name = f->getName();
-    vector<string> prefixes({"equals_", "slice_", "subtract_", "logical_shift_right", "arithmetic_shift_right_", "shift_left_", "zero_extend_", "multiply_", "add_", "invert_", "count_leading_zeros_"});
+    vector<string> prefixes({"equals_", "slice_", "subtract_", "logical_shift_right", "arithmetic_shift_right_", "shift_left_", "zero_extend_", "multiply_", "add_", "invert_", "count_leading_zeros_", "unsigned_divide_"});
     for (auto prefix : prefixes) {
       if (hasPrefix(name, prefix)) {
         return true;
@@ -270,6 +270,10 @@ namespace FuncGen {
     if (hasPrefix(name, "subtract_")) {
       return binopDef("-");
     }
+    if (hasPrefix(name, "unsigned_divide_")) {
+      return binopDef("/");
+    }
+
     if (hasPrefix(name, "multiply_")) {
       return binopDef("*");
     }

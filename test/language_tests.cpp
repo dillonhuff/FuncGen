@@ -28,7 +28,7 @@ namespace FuncGen {
 
 #define IN_FUNC(f, body) {active_function = (f); (body); }
 #define SET(a, b) auto a = active_function->freshVal(#a, (b)->bitWidth()); active_function->assign(a, b);
-
+  
 #define BUILD_FUNC(f) {active_function = (f); }
 
   Expression& operator+(Expression& a, Expression& b) {
@@ -770,26 +770,38 @@ bool genVerilator = runCmd(genCmd);
     auto f = c.newUnaryFunction("approximate_reciprocal_" + to_string(width) + "_" + to_string(approximationWidth), "in", c.arrayType(width), "out", c.arrayType(width));
 
     BUILD_FUNC(f);
+
     auto in = f->getValue("in");
     auto out = f->getValue("out");
 
     SET(numLeadZeros, f->leadZeroCount(in));
     SET(normed, f->shiftLeftVariable(in, numLeadZeros));
-    //BitVector normed = normalize_left(b, 0);
 
     SET(top, f->zextExpr(f->slice(normed->bitWidth() - 1,
                                   normed->bitWidth() - approximationWidth,
-                                  normed), in->bitWidth()));
+                                  normed),
+                         in->bitWidth()));
+
+    auto one_ext = f->constant(2*width, 1 << (2*top->bitWidth() - 1));
+    SET(top_ext, f->zextExpr(top, 2*width));
+
+    f->printStmt("oneExt = %b", {one_ext});
+    f->printStmt("topExt = %b", {top_ext});
+
+    SET(quote, f->unsignedDivide(one_ext, top_ext));
+    SET(finalQuote, f->slice(quote->bitWidth() - 1, quote->bitWidth() - width, f->shiftLeftVariable(quote, f->leadZeroCount(quote))));
+
+    //f->printStmt("finalQuote = %b", {finalQuote});
+    f->assign(out, finalQuote);
 
     return f;
 
-    BitVector top_8 =
-      zero_extend(b.bitLength(),
-                  slice(normed,
-                        normed.bitLength() - approximationWidth,
-                        normed.bitLength()));
-
-    
+    //BitVector normed = normalize_left(b, 0);
+    // BitVector top_8 =
+    //   zero_extend(b.bitLength(),
+    //               slice(normed,
+    //                     normed.bitLength() - approximationWidth,
+    //                     normed.bitLength()));
 
     // assert(top_8.bitLength() == b.bitLength());
 
@@ -843,6 +855,8 @@ bool genVerilator = runCmd(genCmd);
 
     }
 
+    auto approx16 = buildApproximator(width, 10, c);
+
     auto f = c.newFunction("newton_raphson_divide_" + to_string(width),
                            {{"N", c.arrayType(width)}, {"D", c.arrayType(width)}},
                            {{"Q", c.arrayType(width)}});
@@ -873,7 +887,10 @@ bool genVerilator = runCmd(genCmd);
 
     // Otherwise compute the NR update
     SET(one, f->constant(width, 1 << (width - 1)));
-    SET(X, f->constant(width, 1 << (width - 1)));
+    //SET(X, f->constant(width, 1 << (width - 1)));
+    SET(D_recip0, f->unop(approx16, D_));
+    //f->printStmt("D_recip0 = %b\n", {D_recip0});
+    SET(X, D_recip0);
 
     int decPlace = width - 1;
     Expression* update =
