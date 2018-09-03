@@ -67,7 +67,8 @@ namespace FuncGen {
     string mainName = moduleName + "_tb.v";
     string modFile = moduleName + ".v";
 
-    runCmd("cat " + modFile);
+    //runCmd("cat " + modFile);
+    runCmd("iverilog -EV");
 
     string genCmd = "iverilog -g2005-sv -o " + moduleName + " " + mainName + " " + modFile;
     bool compiled = runCmd(genCmd);
