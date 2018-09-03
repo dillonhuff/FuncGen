@@ -363,7 +363,7 @@ namespace FuncGen {
     CodeGenState state;
     //map<Value*, string> valueNameMap;
 
-    out << "/* verilator lint_off UNUSED */" << endl;
+    //out << "/* verilator lint_off UNUSED */" << endl;
     
     for (auto f : nf) {
       out << "module " + f->getName() + "(";
