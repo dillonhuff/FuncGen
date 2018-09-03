@@ -69,7 +69,7 @@ namespace FuncGen {
 
     runCmd("cat " + modFile);
 
-    string genCmd = "iverilog -o " + moduleName + " " + mainName + " " + modFile;
+    string genCmd = "iverilog -g2005-sv -o " + moduleName + " " + mainName + " " + modFile;
     bool compiled = runCmd(genCmd);
     assert(compiled);
 
