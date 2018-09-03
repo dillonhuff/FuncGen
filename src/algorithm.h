@@ -1,6 +1,7 @@
 #ifndef DBHC_ALGORITHM_H
 #define DBHC_ALGORITHM_H
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <iostream>
