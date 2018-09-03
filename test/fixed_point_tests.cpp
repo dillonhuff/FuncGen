@@ -230,6 +230,10 @@ namespace FuncGen {
         int Ni = iRand(-1000, 1000);
         int Di = iRand(-100, 100);
 
+        if (Di == 0) {
+          Di = 1;
+        }
+
         cout << "Ni = " << Ni << endl;
         cout << "Di = " << Di << endl;
 
