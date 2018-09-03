@@ -74,6 +74,21 @@ namespace FuncGen {
     return res == 0;
   }
 
+  bool runIVerilogTB(const std::string& moduleName) {
+    string mainName = moduleName + "_tb.v";
+    string modFile = moduleName + ".v";
+
+    string genCmd = "iverilog -o " + moduleName + " " + mainName + " " + modFile;
+    bool compiled = runCmd(genCmd);
+    if (!compiled) {
+      return false;
+    }
+
+    string exeCmd = "./" + moduleName;
+    bool ran = runCmd(exeCmd);
+    return ran;
+  }
+
   bool runVerilatorTB(const std::string& moduleName) {
 
     string mainName = moduleName + "_tb.cpp";
@@ -1049,7 +1064,7 @@ bool genVerilator = runCmd(genCmd);
 
         synthesizeVerilog(f, constraints);
 
-        REQUIRE(runVerilatorTB(f->getName()));
+        REQUIRE(runIVerilogTB(f->getName()));
       }
     }
     
