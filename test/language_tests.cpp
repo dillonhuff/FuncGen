@@ -774,28 +774,31 @@ bool genVerilator = runCmd(genCmd);
     auto in = f->getValue("in");
     auto out = f->getValue("out");
 
-    SET(numLeadZeros, f->leadZeroCount(in));
-    SET(normed, f->shiftLeftVariable(in, numLeadZeros));
+    vector<pair<BitVector, BitVector> > cases;
+    for (int i = 0; i < (1 << approximationWidth); i++) {
+      BitVector index(approximationWidth, i);
+      BitVector normed = normalize_left(index, 0);
+      BitVector top_8 =
+        zero_extend(index.bitLength(),
+                    slice(normed,
+                          normed.bitLength() - approximationWidth,
+                          normed.bitLength()));
 
-    SET(top, f->zextExpr(f->slice(normed->bitWidth() - 1,
-                                  normed->bitWidth() - approximationWidth,
-                                  normed),
-                         in->bitWidth()));
+      assert(top_8.bitLength() == index.bitLength());
 
-    auto one_ext = f->constant(2*width, 1 << (2*top->bitWidth() - 1));
-    SET(top_ext, f->zextExpr(top, 2*width));
+      BitVector one(top_8.bitLength(), 1 << (top_8.bitLength() - 1));
 
-    f->printStmt("oneExt = %b", {one_ext});
-    f->printStmt("topExt = %b", {top_ext});
+      auto one_ext = back_extend(2*width, one);
+      auto top_8_ext = zero_extend(2*width, top_8);
 
-    SET(quote, f->unsignedDivide(one_ext, top_ext));
-    SET(finalQuote, f->slice(quote->bitWidth() - 1, quote->bitWidth() - width, f->shiftLeftVariable(quote, f->leadZeroCount(quote))));
+      auto quote = unsigned_divide(one_ext, top_8_ext);
 
-    //f->printStmt("finalQuote = %b", {finalQuote});
-    f->assign(out, finalQuote);
+      quote = slice(normalize_left(quote, 0), quote.bitLength() - width, quote.bitLength());
 
-    return f;
+      cases.push_back({index, quote});
+    }
 
+    assert(cases.size() == pow(2, approximationWidth));
     //BitVector normed = normalize_left(b, 0);
     // BitVector top_8 =
     //   zero_extend(b.bitLength(),
@@ -813,6 +816,34 @@ bool genVerilator = runCmd(genCmd);
     // auto quote = unsigned_divide(one_ext, top_8_ext);
 
     // quote = slice(normalize_left(quote, 0), quote.bitLength() - width, quote.bitLength());
+    
+    // SET(numLeadZeros, f->leadZeroCount(in));
+    // SET(normed, f->shiftLeftVariable(in, numLeadZeros));
+
+    // SET(top, f->zextExpr(f->slice(normed->bitWidth() - 1,
+    //                               normed->bitWidth() - approximationWidth,
+    //                               normed),
+    //                      in->bitWidth()));
+
+    // auto one_ext = f->constant(2*width, 1 << (2*top->bitWidth() - 1));
+    // SET(top_ext, f->zextExpr(top, 2*width));
+
+    // // f->printStmt("oneExt = %b", {one_ext});
+    // // f->printStmt("topExt = %b", {top_ext});
+
+    // SET(quote, f->unsignedDivide(one_ext, top_ext));
+    // SET(finalQuote, f->slice(quote->bitWidth() - 1, quote->bitWidth() - width, f->shiftLeftVariable(quote, f->leadZeroCount(quote))));
+
+    //f->printStmt("finalQuote = %b", {finalQuote});
+    //f->assign(out, finalQuote);
+
+    f->assign(out, f->caseStatement(f->slice(in->bitWidth() - 1,
+                                             in->bitWidth() - approximationWidth,
+                                             in),
+                                    cases));
+
+    return f;
+
 
     // return quote;
   }

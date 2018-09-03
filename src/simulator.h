@@ -53,9 +53,9 @@ namespace FuncGen {
     }
 
     void setInput(const std::string& inputName, const BitVector& value) {
-      cout << "Setting input " << inputName << endl;
+      //cout << "Setting input " << inputName << endl;
       variableValues[map_find(inputName, variableNames)] = value;
-      cout << "Done" << endl;
+      //cout << "Done" << endl;
     }
 
     void setValue(Value* v, const BitVector& value) {
@@ -91,7 +91,7 @@ namespace FuncGen {
         return lshr(evaluateExpression(toShift), evaluateExpression(shiftAmount));
 
       } else if (hasPrefix(name, "shift_left_variable")) {
-        cout << "Shift left variable" << endl;
+        //cout << "Shift left variable" << endl;
         Value* toShift = call.getInput("in0");
         Value* shiftAmount = call.getInput("in1");
         return shl(evaluateExpression(toShift), evaluateExpression(shiftAmount));
