@@ -218,7 +218,7 @@ namespace FuncGen {
       assert(v->type() == EXPRESSION_TYPE_VARIABLE);
       Variable* var = sc<Variable*>(v);
 
-      string updateVarName = map_find(v, state.valueNameMap);
+      //string updateVarName = map_find(v, state.valueNameMap);
       // string name = state.uniqueName(var->getName());
       // out << wireDecl(name, var->bitWidth());
       // state.valueNameMap[v] = name;
@@ -233,8 +233,10 @@ namespace FuncGen {
         out << wireDecl(newName, var->bitWidth()) << endl;
         state.valueNameMap[v] = newName;
         
-        assignVars(newName, updateVarName, out);
-        updateVarName = newName;
+        //assignVars(newName, updateVarName, out);
+        //assignVars(newName, updateVarName, out);
+        assignVars(newName, res, out);
+        //updateVarName = newName;
 
         out << "\t// #########################" << endl;
       }
