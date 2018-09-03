@@ -764,6 +764,46 @@ bool genVerilator = runCmd(genCmd);
     return f;
   }
 
+  Function* buildApproximator(const int width,
+                              const int approximationWidth,
+                              Context& c) {
+    auto f = c.newUnaryFunction("approximate_reciprocal_" + to_string(width) + "_" + to_string(approximationWidth), "in", c.arrayType(width), "out", c.arrayType(width));
+
+    BUILD_FUNC(f);
+    auto in = f->getValue("in");
+    auto out = f->getValue("out");
+
+    SET(numLeadZeros, f->leadZeroCount(in));
+    SET(normed, f->shiftLeftVariable(in, numLeadZeros));
+    //BitVector normed = normalize_left(b, 0);
+
+    SET(top, f->zextExpr(f->slice(normed->bitWidth() - 1,
+                                  normed->bitWidth() - approximationWidth,
+                                  normed), in->bitWidth()));
+
+    return f;
+
+    BitVector top_8 =
+      zero_extend(b.bitLength(),
+                  slice(normed,
+                        normed.bitLength() - approximationWidth,
+                        normed.bitLength()));
+
+    
+
+    // assert(top_8.bitLength() == b.bitLength());
+
+    // BitVector one(top_8.bitLength(), 1 << (top_8.bitLength() - 1));
+
+    // auto one_ext = back_extend(2*width, one);
+    // auto top_8_ext = zero_extend(2*width, top_8);
+
+    // auto quote = unsigned_divide(one_ext, top_8_ext);
+
+    // quote = slice(normalize_left(quote, 0), quote.bitLength() - width, quote.bitLength());
+
+    // return quote;
+  }
 
   TEST_CASE("16 bit Newton Raphson") {
     int width = 16;
