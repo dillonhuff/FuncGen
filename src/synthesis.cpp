@@ -74,8 +74,8 @@ namespace FuncGen {
       concat(needed, neededFunctions(rhs));
     } else if (s->type() == STATEMENT_TYPE_CASE) {
       Case* c = sc<Case*>(s);
-      for (auto c : c->getCases()) {
-        concat(needed, neededFunctions(c.second));
+      for (auto cs : c->getCases()) {
+        concat(needed, neededFunctions(cs.second));
       }
     } else if (s->type() == STATEMENT_TYPE_REPEAT) {
       RepeatStmt* r = sc<RepeatStmt*>(s);
