@@ -838,7 +838,7 @@ bool genVerilator = runCmd(genCmd);
     int decPlace = width - 1;
     Expression* update =
       &(*X + *(f->fpMul(X, f->subExpr(one, f->fpMul(D_, X, decPlace)), decPlace)));
-    f->repeat(4, f->assignStmt(X, update));
+    f->repeat(10, f->assignStmt(X, update));
 
     SET(longProd, f->timesExpr(f->zextExpr(absN, 2*width), f->zextExpr(X, 2*width)));
 

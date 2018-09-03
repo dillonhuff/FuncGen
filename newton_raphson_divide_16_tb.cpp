@@ -32,11 +32,6 @@ int main() {
 
   assert(top.Q == (8 / 3));
 
-  top.N = 20;
-  top.D = 5;
-
-  top.eval();
-
   top.N = 239;
   top.D = 17;
 
@@ -56,11 +51,12 @@ int main() {
   cout << "(239 / -17) = " << (239 / -17) << endl;
 
   assert(top.Q == ((239 / -17) & 0xffff));
+
+  top.N = 20;
+  top.D = 5;
+
+  top.eval();
   
   cout << "top.Q      = " << (int) top.Q << endl;
   cout << "(20 / 5)   = " << (20 / 5) << endl;
-
-  assert(top.Q == (20 / 5));
-  
-  
 }
