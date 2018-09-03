@@ -34,10 +34,14 @@ endmodule
 module approximate_reciprocal_16_10(input [15:0] in, output [15:0] out);
 	wire [9:0] av_1;
 	wire [15:0] slice_15_6_in_0;
+
 	assign slice_15_6_in_0 = in;
+
 	wire [9:0] out_1;
 	slice_15_6 slice_15_6_2(.in(slice_15_6_in_0), .out(out_1));
+
 	assign av_1 = out_1;
+
 	wire [15:0] av_2;
 	reg [15:0] av_2reg; 
 	always @(*) begin
@@ -1068,8 +1072,12 @@ module approximate_reciprocal_16_10(input [15:0] in, output [15:0] out);
 			10'h3ff: av_2reg = 16'h8020;
 		endcase
 	end
+
 	assign av_2 = av_2reg;
+
+
 	assign out = av_2;
+
 endmodule
 
 module slice_15_6(input [15:0] in, output [9:0] out);
@@ -1120,14 +1128,20 @@ endmodule
 module twos_complement_absolute_value(input [15:0] in, output [15:0] out);
 	wire [0:0] av_1;
 	wire [15:0] slice_15_15_in_3;
+
 	assign slice_15_15_in_3 = in;
+
 	wire [0:0] out_4;
 	slice_15_15 slice_15_15_5(.in(slice_15_15_in_3), .out(out_4));
+
 	assign av_1 = out_4;
+
 	wire [15:0] av_2;
 	reg [15:0] av_2reg; 
 	wire [15:0] tc_neg_16_in_6;
+
 	assign tc_neg_16_in_6 = in;
+
 	wire [15:0] out_7;
 	tc_neg_16 tc_neg_16_8(.in(tc_neg_16_in_6), .out(out_7));
 	always @(*) begin
@@ -1136,8 +1150,12 @@ module twos_complement_absolute_value(input [15:0] in, output [15:0] out);
 			1'h1: av_2reg = out_7;
 		endcase
 	end
+
 	assign av_2 = av_2reg;
+
+
 	assign out = av_2;
+
 endmodule
 
 module slice_15_15(input [15:0] in, output [0:0] out);
@@ -1155,295 +1173,497 @@ endmodule
 module tc_neg_16(input [15:0] in, output [15:0] out);
 	wire [15:0] av_1;
 	wire [15:0] invert_16_in_9;
+
 	assign invert_16_in_9 = in;
+
 	wire [15:0] out_10;
 	invert_16 invert_16_11(.in(invert_16_in_9), .out(out_10));
+
 	assign av_1 = out_10;
+
 	wire [15:0] av_3;
 	wire [15:0] add_16_in0_12;
+
 	assign add_16_in0_12 = av_1;
+
 	wire [15:0] add_16_in1_13;
+
 	assign add_16_in1_13 = 16'h0001;
+
 	wire [15:0] out_14;
 	add_16 add_16_15(.in0(add_16_in0_12), .in1(add_16_in1_13), .out(out_14));
+
 	assign av_3 = out_14;
+
+
 	assign out = av_3;
+
 endmodule
 
 module newton_raphson_divide_16(input [15:0] D, input [15:0] N, output [15:0] Q);
 	wire [15:0] absN;
 	wire [15:0] twos_complement_absolute_value_in_16;
+
 	assign twos_complement_absolute_value_in_16 = N;
+
 	wire [15:0] out_17;
 	twos_complement_absolute_value twos_complement_absolute_value_18(.in(twos_complement_absolute_value_in_16), .out(out_17));
+
 	assign absN = out_17;
+
 	wire [15:0] absD;
 	wire [15:0] twos_complement_absolute_value_in_19;
+
 	assign twos_complement_absolute_value_in_19 = D;
+
 	wire [15:0] out_20;
 	twos_complement_absolute_value twos_complement_absolute_value_21(.in(twos_complement_absolute_value_in_19), .out(out_20));
+
 	assign absD = out_20;
+
 	wire [0:0] av_3;
 	wire [15:0] slice_15_15_in_22;
+
 	assign slice_15_15_in_22 = N;
+
 	wire [0:0] out_23;
 	slice_15_15 slice_15_15_24(.in(slice_15_15_in_22), .out(out_23));
+
 	assign av_3 = out_23;
+
 	wire [0:0] av_5;
 	wire [15:0] slice_15_15_in_25;
+
 	assign slice_15_15_in_25 = N;
+
 	wire [0:0] out_26;
 	slice_15_15 slice_15_15_27(.in(slice_15_15_in_25), .out(out_26));
+
 	assign av_5 = out_26;
+
 	wire [0:0] NisNeg;
+
 	assign NisNeg = av_5;
+
 	wire [0:0] av_6;
 	wire [15:0] slice_15_15_in_28;
+
 	assign slice_15_15_in_28 = D;
+
 	wire [0:0] out_29;
 	slice_15_15 slice_15_15_30(.in(slice_15_15_in_28), .out(out_29));
+
 	assign av_6 = out_29;
+
 	wire [0:0] av_8;
 	wire [15:0] slice_15_15_in_31;
+
 	assign slice_15_15_in_31 = D;
+
 	wire [0:0] out_32;
 	slice_15_15 slice_15_15_33(.in(slice_15_15_in_31), .out(out_32));
+
 	assign av_8 = out_32;
+
 	wire [0:0] DisNeg;
+
 	assign DisNeg = av_8;
+
 	wire [15:0] av_9;
 	wire [15:0] count_leading_zeros_16_in_34;
+
 	assign count_leading_zeros_16_in_34 = absD;
+
 	wire [15:0] out_35;
 	count_leading_zeros_16 count_leading_zeros_16_36(.in(count_leading_zeros_16_in_34), .out(out_35));
+
 	assign av_9 = out_35;
+
 	wire [15:0] av_11;
 	wire [15:0] count_leading_zeros_16_in_37;
+
 	assign count_leading_zeros_16_in_37 = absD;
+
 	wire [15:0] out_38;
 	count_leading_zeros_16 count_leading_zeros_16_39(.in(count_leading_zeros_16_in_37), .out(out_38));
+
 	assign av_11 = out_38;
+
 	wire [15:0] DleadingZeros;
+
 	assign DleadingZeros = av_11;
+
 	wire [15:0] shiftDistance;
 	wire [15:0] subtract_16_in0_40;
+
 	assign subtract_16_in0_40 = DleadingZeros;
+
 	wire [15:0] subtract_16_in1_41;
+
 	assign subtract_16_in1_41 = 16'h0001;
+
 	wire [15:0] out_42;
 	subtract_16 subtract_16_43(.in0(subtract_16_in0_40), .in1(subtract_16_in1_41), .out(out_42));
+
 	assign shiftDistance = out_42;
+
 	wire [15:0] av_15;
 	wire [15:0] shift_left_variable_16_in0_44;
+
 	assign shift_left_variable_16_in0_44 = absD;
+
 	wire [15:0] shift_left_variable_16_in1_45;
+
 	assign shift_left_variable_16_in1_45 = shiftDistance;
+
 	wire [15:0] out_46;
 	shift_left_variable_16 shift_left_variable_16_47(.in0(shift_left_variable_16_in0_44), .in1(shift_left_variable_16_in1_45), .out(out_46));
+
 	assign av_15 = out_46;
+
 	wire [15:0] av_17;
 	wire [15:0] shift_left_variable_16_in0_48;
+
 	assign shift_left_variable_16_in0_48 = absD;
+
 	wire [15:0] shift_left_variable_16_in1_49;
+
 	assign shift_left_variable_16_in1_49 = shiftDistance;
+
 	wire [15:0] out_50;
 	shift_left_variable_16 shift_left_variable_16_51(.in0(shift_left_variable_16_in0_48), .in1(shift_left_variable_16_in1_49), .out(out_50));
+
 	assign av_17 = out_50;
+
 	wire [15:0] D_;
+
 	assign D_ = av_17;
+
 	wire [15:0] oneConst;
+
 	assign oneConst = 16'h4000;
+
 	wire [0:0] D_isPowOfTwo;
 	wire [15:0] equals_16_in0_52;
+
 	assign equals_16_in0_52 = D_;
+
 	wire [15:0] equals_16_in1_53;
+
 	assign equals_16_in1_53 = oneConst;
+
 	wire [0:0] out_54;
 	equals_16 equals_16_55(.in0(equals_16_in0_52), .in1(equals_16_in1_53), .out(out_54));
+
 	assign D_isPowOfTwo = out_54;
+
 	wire [15:0] shiftDiv0;
 	wire [15:0] subtract_16_in0_56;
+
 	assign subtract_16_in0_56 = 16'h0010;
+
 	wire [15:0] subtract_16_in1_57;
+
 	assign subtract_16_in1_57 = shiftDistance;
+
 	wire [15:0] out_58;
 	subtract_16 subtract_16_59(.in0(subtract_16_in0_56), .in1(subtract_16_in1_57), .out(out_58));
+
 	assign shiftDiv0 = out_58;
+
 	wire [15:0] av_26;
 	wire [15:0] subtract_16_in0_60;
+
 	assign subtract_16_in0_60 = shiftDiv0;
+
 	wire [15:0] subtract_16_in1_61;
+
 	assign subtract_16_in1_61 = 16'h0002;
+
 	wire [15:0] out_62;
 	subtract_16 subtract_16_63(.in0(subtract_16_in0_60), .in1(subtract_16_in1_61), .out(out_62));
+
 	assign av_26 = out_62;
+
 	wire [15:0] av_29;
 	wire [15:0] subtract_16_in0_64;
+
 	assign subtract_16_in0_64 = shiftDiv0;
+
 	wire [15:0] subtract_16_in1_65;
+
 	assign subtract_16_in1_65 = 16'h0002;
+
 	wire [15:0] out_66;
 	subtract_16 subtract_16_67(.in0(subtract_16_in0_64), .in1(subtract_16_in1_65), .out(out_66));
+
 	assign av_29 = out_66;
+
 	wire [15:0] shiftDiv;
+
 	assign shiftDiv = av_29;
+
 	wire [15:0] av_30;
 	wire [15:0] logical_shift_right_variable_16_in0_68;
+
 	assign logical_shift_right_variable_16_in0_68 = absN;
+
 	wire [15:0] logical_shift_right_variable_16_in1_69;
+
 	assign logical_shift_right_variable_16_in1_69 = shiftDiv;
+
 	wire [15:0] out_70;
 	logical_shift_right_variable_16 logical_shift_right_variable_16_71(.in0(logical_shift_right_variable_16_in0_68), .in1(logical_shift_right_variable_16_in1_69), .out(out_70));
+
 	assign av_30 = out_70;
+
 	wire [15:0] av_32;
 	wire [15:0] logical_shift_right_variable_16_in0_72;
+
 	assign logical_shift_right_variable_16_in0_72 = absN;
+
 	wire [15:0] logical_shift_right_variable_16_in1_73;
+
 	assign logical_shift_right_variable_16_in1_73 = shiftDiv;
+
 	wire [15:0] out_74;
 	logical_shift_right_variable_16 logical_shift_right_variable_16_75(.in0(logical_shift_right_variable_16_in0_72), .in1(logical_shift_right_variable_16_in1_73), .out(out_74));
+
 	assign av_32 = out_74;
+
 	wire [15:0] shrD;
+
 	assign shrD = av_32;
+
 	wire [15:0] one;
+
 	assign one = 16'h8000;
+
 	wire [15:0] D_recip0;
 	wire [15:0] approximate_reciprocal_16_10_in_76;
+
 	assign approximate_reciprocal_16_10_in_76 = D_;
+
 	wire [15:0] out_77;
 	approximate_reciprocal_16_10 approximate_reciprocal_16_10_78(.in(approximate_reciprocal_16_10_in_76), .out(out_77));
+
 	assign D_recip0 = out_77;
+
 	wire [15:0] X;
+
 	assign X = D_recip0;
+
 	// ### Iteration 0
 	wire [15:0] add_16_in0_79;
+
 	assign add_16_in0_79 = X;
+
 	wire [15:0] add_16_in1_80;
 	wire [31:0] slice_15_0_in_81;
 	wire [31:0] logical_shift_right_15_32_in_82;
 	wire [31:0] multiply_32_in0_83;
 	wire [15:0] zero_extend_32_16_32_in_84;
+
 	assign zero_extend_32_16_32_in_84 = X;
+
 	wire [31:0] out_85;
 	zero_extend_32_16_32 zero_extend_32_16_32_86(.in(zero_extend_32_16_32_in_84), .out(out_85));
+
 	assign multiply_32_in0_83 = out_85;
+
 	wire [31:0] multiply_32_in1_87;
 	wire [15:0] zero_extend_32_16_32_in_88;
 	wire [15:0] subtract_16_in0_89;
+
 	assign subtract_16_in0_89 = one;
+
 	wire [15:0] subtract_16_in1_90;
 	wire [31:0] slice_15_0_in_91;
 	wire [31:0] logical_shift_right_15_32_in_92;
 	wire [31:0] multiply_32_in0_93;
 	wire [15:0] zero_extend_32_16_32_in_94;
+
 	assign zero_extend_32_16_32_in_94 = D_;
+
 	wire [31:0] out_95;
 	zero_extend_32_16_32 zero_extend_32_16_32_96(.in(zero_extend_32_16_32_in_94), .out(out_95));
+
 	assign multiply_32_in0_93 = out_95;
+
 	wire [31:0] multiply_32_in1_97;
 	wire [15:0] zero_extend_32_16_32_in_98;
+
 	assign zero_extend_32_16_32_in_98 = X;
+
 	wire [31:0] out_99;
 	zero_extend_32_16_32 zero_extend_32_16_32_100(.in(zero_extend_32_16_32_in_98), .out(out_99));
+
 	assign multiply_32_in1_97 = out_99;
+
 	wire [31:0] out_101;
 	multiply_32 multiply_32_102(.in0(multiply_32_in0_93), .in1(multiply_32_in1_97), .out(out_101));
+
 	assign logical_shift_right_15_32_in_92 = out_101;
+
 	wire [31:0] out_103;
 	logical_shift_right_15_32 logical_shift_right_15_32_104(.in(logical_shift_right_15_32_in_92), .out(out_103));
+
 	assign slice_15_0_in_91 = out_103;
+
 	wire [15:0] out_105;
 	slice_15_0 slice_15_0_106(.in(slice_15_0_in_91), .out(out_105));
+
 	assign subtract_16_in1_90 = out_105;
+
 	wire [15:0] out_107;
 	subtract_16 subtract_16_108(.in0(subtract_16_in0_89), .in1(subtract_16_in1_90), .out(out_107));
+
 	assign zero_extend_32_16_32_in_88 = out_107;
+
 	wire [31:0] out_109;
 	zero_extend_32_16_32 zero_extend_32_16_32_110(.in(zero_extend_32_16_32_in_88), .out(out_109));
+
 	assign multiply_32_in1_87 = out_109;
+
 	wire [31:0] out_111;
 	multiply_32 multiply_32_112(.in0(multiply_32_in0_83), .in1(multiply_32_in1_87), .out(out_111));
+
 	assign logical_shift_right_15_32_in_82 = out_111;
+
 	wire [31:0] out_113;
 	logical_shift_right_15_32 logical_shift_right_15_32_114(.in(logical_shift_right_15_32_in_82), .out(out_113));
+
 	assign slice_15_0_in_81 = out_113;
+
 	wire [15:0] out_115;
 	slice_15_0 slice_15_0_116(.in(slice_15_0_in_81), .out(out_115));
+
 	assign add_16_in1_80 = out_115;
+
 	wire [15:0] out_117;
 	add_16 add_16_118(.in0(add_16_in0_79), .in1(add_16_in1_80), .out(out_117));
 	wire [15:0] X_119;
+
 	assign X_119 = out_117;
+
 	// #########################
 	wire [31:0] longProd;
 	wire [31:0] multiply_32_in0_120;
 	wire [15:0] zero_extend_32_16_32_in_121;
+
 	assign zero_extend_32_16_32_in_121 = absN;
+
 	wire [31:0] out_122;
 	zero_extend_32_16_32 zero_extend_32_16_32_123(.in(zero_extend_32_16_32_in_121), .out(out_122));
+
 	assign multiply_32_in0_120 = out_122;
+
 	wire [31:0] multiply_32_in1_124;
 	wire [15:0] zero_extend_32_16_32_in_125;
+
 	assign zero_extend_32_16_32_in_125 = X_119;
+
 	wire [31:0] out_126;
 	zero_extend_32_16_32 zero_extend_32_16_32_127(.in(zero_extend_32_16_32_in_125), .out(out_126));
+
 	assign multiply_32_in1_124 = out_126;
+
 	wire [31:0] out_128;
 	multiply_32 multiply_32_129(.in0(multiply_32_in0_120), .in1(multiply_32_in1_124), .out(out_128));
+
 	assign longProd = out_128;
+
 	wire [31:0] wConst;
+
 	assign wConst = 32'h00000010;
+
 	wire [31:0] twoConst;
+
 	assign twoConst = 32'h00000002;
+
 	wire [31:0] resShift;
 	wire [31:0] add_32_in0_130;
+
 	assign add_32_in0_130 = wConst;
+
 	wire [31:0] add_32_in1_131;
 	wire [31:0] subtract_32_in0_132;
 	wire [31:0] subtract_32_in0_133;
+
 	assign subtract_32_in0_133 = wConst;
+
 	wire [31:0] subtract_32_in1_134;
 	wire [15:0] zero_extend_32_16_32_in_135;
+
 	assign zero_extend_32_16_32_in_135 = shiftDistance;
+
 	wire [31:0] out_136;
 	zero_extend_32_16_32 zero_extend_32_16_32_137(.in(zero_extend_32_16_32_in_135), .out(out_136));
+
 	assign subtract_32_in1_134 = out_136;
+
 	wire [31:0] out_138;
 	subtract_32 subtract_32_139(.in0(subtract_32_in0_133), .in1(subtract_32_in1_134), .out(out_138));
+
 	assign subtract_32_in0_132 = out_138;
+
 	wire [31:0] subtract_32_in1_140;
+
 	assign subtract_32_in1_140 = twoConst;
+
 	wire [31:0] out_141;
 	subtract_32 subtract_32_142(.in0(subtract_32_in0_132), .in1(subtract_32_in1_140), .out(out_141));
+
 	assign add_32_in1_131 = out_141;
+
 	wire [31:0] out_143;
 	add_32 add_32_144(.in0(add_32_in0_130), .in1(add_32_in1_131), .out(out_143));
+
 	assign resShift = out_143;
+
 	//"resShift = %b"
 	wire [31:0] av_46;
 	wire [31:0] logical_shift_right_variable_32_in0_145;
+
 	assign logical_shift_right_variable_32_in0_145 = longProd;
+
 	wire [31:0] logical_shift_right_variable_32_in1_146;
+
 	assign logical_shift_right_variable_32_in1_146 = resShift;
+
 	wire [31:0] out_147;
 	logical_shift_right_variable_32 logical_shift_right_variable_32_148(.in0(logical_shift_right_variable_32_in0_145), .in1(logical_shift_right_variable_32_in1_146), .out(out_147));
+
 	assign av_46 = out_147;
+
 	wire [31:0] av_48;
 	wire [31:0] logical_shift_right_variable_32_in0_149;
+
 	assign logical_shift_right_variable_32_in0_149 = longProd;
+
 	wire [31:0] logical_shift_right_variable_32_in1_150;
+
 	assign logical_shift_right_variable_32_in1_150 = resShift;
+
 	wire [31:0] out_151;
 	logical_shift_right_variable_32 logical_shift_right_variable_32_152(.in0(logical_shift_right_variable_32_in0_149), .in1(logical_shift_right_variable_32_in1_150), .out(out_151));
+
 	assign av_48 = out_151;
+
 	wire [31:0] a0;
+
 	assign a0 = av_48;
+
 	wire [15:0] tentativeRes;
 	wire [31:0] slice_15_0_in_153;
+
 	assign slice_15_0_in_153 = a0;
+
 	wire [15:0] out_154;
 	slice_15_0 slice_15_0_155(.in(slice_15_0_in_153), .out(out_154));
+
 	assign tentativeRes = out_154;
+
 	wire [15:0] av_50;
 	reg [15:0] av_50reg; 
 	always @(*) begin
@@ -1452,29 +1672,47 @@ module newton_raphson_divide_16(input [15:0] D, input [15:0] N, output [15:0] Q)
 			1'h1: av_50reg = shrD;
 		endcase
 	end
+
 	assign av_50 = av_50reg;
+
 	wire [0:0] av_51;
 	wire [0:0] equals_1_in0_156;
+
 	assign equals_1_in0_156 = DisNeg;
+
 	wire [0:0] equals_1_in1_157;
+
 	assign equals_1_in1_157 = NisNeg;
+
 	wire [0:0] out_158;
 	equals_1 equals_1_159(.in0(equals_1_in0_156), .in1(equals_1_in1_157), .out(out_158));
+
 	assign av_51 = out_158;
+
 	wire [0:0] av_53;
 	wire [0:0] equals_1_in0_160;
+
 	assign equals_1_in0_160 = DisNeg;
+
 	wire [0:0] equals_1_in1_161;
+
 	assign equals_1_in1_161 = NisNeg;
+
 	wire [0:0] out_162;
 	equals_1 equals_1_163(.in0(equals_1_in0_160), .in1(equals_1_in1_161), .out(out_162));
+
 	assign av_53 = out_162;
+
 	wire [0:0] signsMatch;
+
 	assign signsMatch = av_53;
+
 	wire [15:0] av_54;
 	reg [15:0] av_54reg; 
 	wire [15:0] tc_neg_16_in_164;
+
 	assign tc_neg_16_in_164 = av_50;
+
 	wire [15:0] out_165;
 	tc_neg_16 tc_neg_16_166(.in(tc_neg_16_in_164), .out(out_165));
 	always @(*) begin
@@ -1483,7 +1721,11 @@ module newton_raphson_divide_16(input [15:0] D, input [15:0] N, output [15:0] Q)
 			1'h1: av_54reg = av_50;
 		endcase
 	end
+
 	assign av_54 = av_54reg;
+
+
 	assign Q = av_54;
+
 endmodule
 

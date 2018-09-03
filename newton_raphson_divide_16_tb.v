@@ -1,4 +1,4 @@
-`define assert(signal, value) if (signal !== value) begin $display("ASSERTION FAILED in %m: signal != value"); $finish; end
+`define assert(signal, value) if (signal !== value) begin $display("ASSERTION FAILED in %m: signal != value"); $finish(1); end
 
 module test();
 
@@ -32,6 +32,10 @@ module test();
       #1 N = 20;
       #1 D = 5;
       #1 `assert(Q, 4);
+
+      #1 N = 4971;
+      #1 D = -93;
+      #1 `assert(Q, -16'd53);
       
    end
 

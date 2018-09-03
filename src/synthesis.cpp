@@ -102,7 +102,7 @@ namespace FuncGen {
   }
 
   void assignVars(const std::string& lhs, const std::string& rhs, ostream& out) {
-    out << "\tassign " << lhs << " = " << rhs << ";" << endl;
+    out << endl << "\tassign " << lhs << " = " << rhs << ";" << endl << endl;
   }
 
   std::vector<std::string> portConnections(map<string, string>& conns) {

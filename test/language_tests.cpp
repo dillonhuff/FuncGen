@@ -9,12 +9,6 @@ using namespace std;
 
 namespace FuncGen {
 
-  // To make things easier this macro set needs to:
-  // 1. Allow hieararchical changes of statement that things are being
-  //    appended to
-  // 2. Allow expressions to be safely allocated somewhere
-  // 3. Allow transitions in and out of 
-
   Function* active_function;
   
   Statement* active_stmt_block;
@@ -72,18 +66,26 @@ namespace FuncGen {
 
     string genCmd = "iverilog -g2005-sv -o " + moduleName + " " + mainName + " " + modFile;
     bool compiled = runCmd(genCmd);
-    assert(compiled);
 
     if (!compiled) {
       return false;
     }
 
-    string exeCmd = "./" + moduleName;
+    string resFile = moduleName + "_tb_result.txt";
+    string exeCmd = "./" + moduleName + " > " + resFile;
     bool ran = runCmd(exeCmd);
 
     assert(ran);
 
-    return ran;
+    ifstream res(resFile);
+    std::string str((std::istreambuf_iterator<char>(res)),
+                    std::istreambuf_iterator<char>());
+
+    cout << "str = " << str << endl;
+    
+    runCmd("rm -f " + resFile);
+
+    return str == "Passed\n";
   }
 
   bool runVerilatorTB(const std::string& moduleName) {
