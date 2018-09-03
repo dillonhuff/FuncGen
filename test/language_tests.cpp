@@ -58,6 +58,7 @@ namespace FuncGen {
 #define IF(cond, a, b) { aBlock = new Block(); IN_STMT(aBlock, (a)); bBlock = new Block(); IN_STMT(bBlock, (b)); add_if_to_active_statement(cond, ablock, bblock); }
 
   bool runCmd(const std::string& cmd) {
+    cout << "Running command: " << cmd << endl;
     bool res = system(cmd.c_str());
     return res == 0;
   }
@@ -65,6 +66,8 @@ namespace FuncGen {
   bool runIVerilogTB(const std::string& moduleName) {
     string mainName = moduleName + "_tb.v";
     string modFile = moduleName + ".v";
+
+    runCmd("cat " + modFile);
 
     string genCmd = "iverilog -o " + moduleName + " " + mainName + " " + modFile;
     bool compiled = runCmd(genCmd);
