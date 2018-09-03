@@ -35,20 +35,15 @@ namespace FuncGen {
   }
 
   BitVector approximate(const BitVector& b) {
-    //cout << "b.bits = " << b << endl;
-
     int width = b.bitLength();
     int approximationWidth = 10;
     BitVector normed = normalize_left(b, 0);
 
-    //cout << "normed = " << normed << endl;
-    
     BitVector top_8 =
       zero_extend(b.bitLength(),
                   slice(normed,
                         normed.bitLength() - approximationWidth,
                         normed.bitLength()));
-    //cout << "top_8 bits = " << top_8 << endl;
 
     assert(top_8.bitLength() == b.bitLength());
 
@@ -59,17 +54,7 @@ namespace FuncGen {
 
     auto quote = unsigned_divide(one_ext, top_8_ext);
 
-    // cout << "one   = " << one_ext << endl;
-    // cout << "top   = " << top_8_ext << endl;
-    // cout << "quote = " << quote << endl;
-
     quote = slice(normalize_left(quote, 0), quote.bitLength() - width, quote.bitLength());
-
-
-    FixedPoint q(0, normalize_left(quote, 0), -15);
-    //cout << "Initial approximation = " << q << ", double = " << fixedPointToDouble(q) << endl;
-    
-    //cout << "Actual          1 / D = " << (1 / fixedPointToDouble(FixedPoint(0, b, -15))) << endl;
 
     return quote;
   }

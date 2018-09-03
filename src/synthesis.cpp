@@ -361,7 +361,6 @@ namespace FuncGen {
       neededFunctions(f);
 
     CodeGenState state;
-    //map<Value*, string> valueNameMap;
 
     out << "/* verilator lint_off UNUSED */" << endl;
     
@@ -392,7 +391,6 @@ namespace FuncGen {
       
         for (auto stmt : f->getStatements()) {
           generateStmt(state, stmt, out);
-          //out << "// " << stmt->toString(1) << endl;
         }
       }
 
