@@ -57,18 +57,6 @@ namespace FuncGen {
   
 #define IF(cond, a, b) { aBlock = new Block(); IN_STMT(aBlock, (a)); bBlock = new Block(); IN_STMT(bBlock, (b)); add_if_to_active_statement(cond, ablock, bblock); }
 
-  // IF(a,
-  //    SET(a, b)
-  //    SET(a, b + 1),
-  //    SET(a, 0))
-
-  // Becomes something like
-  // append new if statement to current statement block
-  // set that if's true condition to be the active statement block
-  // add statement SET(a, b) to active block
-  // add statement SET(a, b + 1) to active block
-  //
-
   bool runCmd(const std::string& cmd) {
     bool res = system(cmd.c_str());
     return res == 0;
@@ -80,12 +68,17 @@ namespace FuncGen {
 
     string genCmd = "iverilog -o " + moduleName + " " + mainName + " " + modFile;
     bool compiled = runCmd(genCmd);
+    assert(compiled);
+
     if (!compiled) {
       return false;
     }
 
     string exeCmd = "./" + moduleName;
     bool ran = runCmd(exeCmd);
+
+    assert(ran);
+
     return ran;
   }
 
